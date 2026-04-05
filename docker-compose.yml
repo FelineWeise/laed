@@ -19,7 +19,7 @@ services:
 
   # ── Application Server ─────────────────────────────────
   app:
-    build: ./backend
+    image: rg.fr-par.scw.cloud/laed/backend:latest
     environment:
       - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
       - REDIS_URL=redis://redis:6379/0
@@ -47,7 +47,7 @@ services:
 
   # ── Celery Worker ──────────────────────────────────────
   worker:
-    build: ./backend
+    image: rg.fr-par.scw.cloud/laed/backend:latest
     command: celery -A app.worker worker --loglevel=info --concurrency=2
     environment:
       - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
