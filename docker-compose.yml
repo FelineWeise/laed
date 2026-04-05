@@ -123,9 +123,7 @@ services:
 
   # ── Speech-to-Text (Parakeet TDT 0.6B v3) ─────────────
   parakeet:
-    build:
-      context: https://github.com/groxaxo/parakeet-tdt-0.6b-v3-fastapi-openai.git
-      dockerfile: Dockerfile.cpu
+    image: rg.fr-par.scw.cloud/laed/parakeet:latest
     ports:
       - "127.0.0.1:5092:5092"
     volumes:
