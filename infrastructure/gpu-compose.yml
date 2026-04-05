@@ -1,0 +1,18 @@
+services:
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "0.0.0.0:11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: always
+
+volumes:
+  ollama_models:

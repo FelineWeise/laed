@@ -245,6 +245,85 @@ All project members see message in real-time
 
 ## 5. Database Schema (Core Tables)
 
+### 5.1 Model Architecture — BaseMixin Pattern
+
+All models inherit from a shared `BaseMixin` that provides `id` (UUID, server-generated) and `created_at` (timestamp, server-generated). This eliminates repetition across all 8 tables and provides a single place to add cross-cutting columns later (e.g., `updated_at`).
+
+```python
+# backend/app/models/base.py
+class BaseMixin:
+    id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, server_default=text("gen_random_uuid()"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
+
+# Every model inherits from both BaseMixin and Base:
+class User(BaseMixin, Base):
+    __tablename__ = "users"
+    email: Mapped[str] = mapped_column(String, unique=True)
+    # ...only user-specific columns
+```
+
+### 5.2 Pydantic Schema Hierarchy — API Contract
+
+SQLAlchemy models define storage; Pydantic schemas define the API contract (what the client sees). They are deliberately separate so you can shape each independently — e.g., `User` has `password_hash` in the DB but never exposes it in a response.
+
+Schemas use inheritance to reduce duplication across create/update/response variants:
+
+```python
+# backend/app/schemas.py
+
+# Base shape — shared fields for input
+class ProjectBase(BaseModel):
+    name: str
+    description: str | None = None
+
+# Create request — extends base with creation-specific fields
+class ProjectCreate(ProjectBase):
+    ownership_model: str = "owned"
+
+# List response — extends base with DB-generated fields
+class ProjectResponse(ProjectBase):
+    id: uuid.UUID
+    created_at: datetime
+    ownership_model: str
+    model_config = {"from_attributes": True}  # reads directly from SQLAlchemy objects
+
+# Detail response — extends list response with computed/nested fields
+class ProjectDetailResponse(ProjectResponse):
+    members: list[MemberResponse]
+    file_count: int
+```
+
+`from_attributes = True` allows `ProjectResponse.model_validate(db_project)` — Pydantic reads directly from the SQLAlchemy object's attributes, no manual field-by-field mapping needed.
+
+### 5.3 OpenAPI → TypeScript Type Generation Pipeline
+
+FastAPI auto-generates an OpenAPI (Swagger) spec from the Pydantic schemas. This spec can be consumed by codegen tools to produce TypeScript interfaces for the frontend (web and mobile share the same types):
+
+```
+SQLAlchemy Models → Pydantic Schemas → FastAPI OpenAPI JSON → TypeScript Interfaces
+   (DB schema)       (API contract)     (auto-generated)       (one command)
+```
+
+Generate TypeScript types from the running API:
+```bash
+npx openapi-typescript http://localhost:8000/api/openapi.json -o src/api/types.ts
+```
+
+This produces typed interfaces that both Expo (React Native) and any web frontend consume directly:
+```typescript
+interface ProjectResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  ownership_model: string;
+  created_at: string;
+}
+```
+
+The types are derived from the Pydantic schemas, so they can never drift out of sync with the API. When a schema changes in the backend, re-running the codegen command updates the frontend types.
+
+### 5.4 SQL Schema
+
 ```sql
 -- Users
 users (

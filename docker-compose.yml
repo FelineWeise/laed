@@ -1,0 +1,166 @@
+services:
+  # ── Reverse Proxy ──────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - app
+    networks:
+      - frontend
+    restart: always
+
+  # ── Application Server ─────────────────────────────────
+  app:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
+      - REDIS_URL=redis://redis:6379/0
+      - LLM_GATEWAY_URL=http://litellm:4000/v1
+      - LLM_GATEWAY_KEY=${LITELLM_MASTER_KEY}
+      - OLLAMA_URL=${OLLAMA_URL}
+      - MINIO_URL=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - STT_URL=http://parakeet:5092
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS:-24}
+      - LLM_MODEL=${LLM_MODEL}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - litellm
+    networks:
+      - frontend
+      - backend
+    restart: always
+
+  # ── Celery Worker ──────────────────────────────────────
+  worker:
+    build: ./backend
+    command: celery -A app.worker worker --loglevel=info --concurrency=2
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
+      - REDIS_URL=redis://redis:6379/0
+      - LLM_GATEWAY_URL=http://litellm:4000/v1
+      - LLM_GATEWAY_KEY=${LITELLM_MASTER_KEY}
+      - OLLAMA_URL=${OLLAMA_URL}
+      - MINIO_URL=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+    depends_on:
+      - redis
+      - postgres
+      - litellm
+    networks:
+      - backend
+    restart: always
+
+  # ── Database (PostgreSQL + pgvector) ───────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      - POSTGRES_DB=projectspace
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+    restart: always
+
+  # ── Task Queue Broker ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    networks:
+      - backend
+    restart: always
+
+  # ── File Storage ───────────────────────────────────────
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    volumes:
+      - filedata:/data
+    networks:
+      - backend
+    restart: always
+
+  # ── LLM Gateway ────────────────────────────────────────
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml"]
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
+      - OLLAMA_URL=${OLLAMA_URL}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    restart: always
+
+  # ── Speech-to-Text (Parakeet TDT 0.6B v3) ─────────────
+  parakeet:
+    build:
+      context: https://github.com/groxaxo/parakeet-tdt-0.6b-v3-fastapi-openai.git
+      dockerfile: Dockerfile.cpu
+    ports:
+      - "127.0.0.1:5092:5092"
+    volumes:
+      - parakeet_models:/app/models
+    networks:
+      - backend
+    restart: always
+
+  # ── Docker Socket Proxy (for OpenClaw) ─────────────────
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    environment:
+      - CONTAINERS=1
+      - INFO=1
+      - POST=0
+      - EXEC=0
+      - BUILD=0
+      - COMMIT=0
+      - IMAGES=0
+      - VOLUMES=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - openclaw
+    restart: always
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pgdata:
+  redisdata:
+  filedata:
+  parakeet_models:
+
+networks:
+  frontend:
+  backend:
+  openclaw:
