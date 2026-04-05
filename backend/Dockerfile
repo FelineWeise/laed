@@ -8,12 +8,16 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --only main --no-root --no-interaction
 
 COPY app/ app/
+COPY alembic.ini alembic.ini
+COPY alembic/ alembic/
 
 FROM python:3.12-slim
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/app /app/app
+COPY --from=builder /app/alembic.ini /app/alembic.ini
+COPY --from=builder /app/alembic /app/alembic
 
 ENV PATH="/app/.venv/bin:$PATH"
 
