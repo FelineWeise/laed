@@ -1,6 +1,7 @@
 import asyncio
 from logging.config import fileConfig
 
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
@@ -40,6 +41,8 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection) -> None:
+    connection.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector"))
+    connection.commit()
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
