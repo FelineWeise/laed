@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# MANUAL FALLBACK — model pulling is handled automatically by cloud-init/gpu.yaml.tftpl
+# when using Terraform provisioning. Kept for manual model management.
 set -euo pipefail
 
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"

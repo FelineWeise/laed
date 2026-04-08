@@ -1,0 +1,74 @@
+#cloud-config
+# Scaleway's ubuntu_noble_gpu image ships with NVIDIA drivers and Docker.
+# This cloud-init only adds the Container Toolkit, starts Ollama, and pulls models.
+
+package_update: true
+
+packages:
+  - ufw
+
+write_files:
+  - path: /opt/gpu-services/docker-compose.yml
+    permissions: "0644"
+    content: |
+      services:
+        ollama:
+          image: ollama/ollama
+          ports:
+            - "0.0.0.0:11434:11434"
+          volumes:
+            - ollama_models:/root/.ollama
+          deploy:
+            resources:
+              reservations:
+                devices:
+                  - driver: nvidia
+                    count: 1
+                    capabilities: [gpu]
+          restart: always
+
+      volumes:
+        ollama_models:
+
+runcmd:
+  # ── Mount block volume for model storage ──────────────────────────────
+  - mkdir -p /opt/gpu-models
+  - |
+    BLOCK_DEV=$(lsblk -dpno NAME,TYPE | grep disk | tail -1 | awk '{print $1}')
+    if [ -n "$BLOCK_DEV" ] && ! blkid "$BLOCK_DEV" | grep -q ext4; then
+      mkfs.ext4 "$BLOCK_DEV"
+    fi
+    if [ -n "$BLOCK_DEV" ]; then
+      mount "$BLOCK_DEV" /opt/gpu-models
+      echo "$BLOCK_DEV /opt/gpu-models ext4 defaults,nofail 0 2" >> /etc/fstab
+    fi
+
+  # ── NVIDIA Container Toolkit (drivers already installed in image) ─────
+  - curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  - |
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+      | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+      > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  - apt-get update
+  - apt-get install -y nvidia-container-toolkit
+  - nvidia-ctk runtime configure --runtime=docker
+  - systemctl restart docker
+
+  # ── Start Ollama ──────────────────────────────────────────────────────
+  - cd /opt/gpu-services && docker compose up -d
+
+  # ── Wait for Ollama API ──────────────────────────────────────────────
+  - |
+    for i in $(seq 1 30); do
+      curl -sf http://localhost:11434/api/tags >/dev/null 2>&1 && break
+      sleep 2
+    done
+
+  # ── Pull models ──────────────────────────────────────────────────────
+  - 'curl -sf http://localhost:11434/api/pull -d ''{"name": "${llm_model}"}'' > /dev/null'
+  - 'curl -sf http://localhost:11434/api/pull -d ''{"name": "${embedding_model}"}'' > /dev/null'
+
+  # ── Firewall: Ollama only from private network ────────────────────────
+  - ufw allow OpenSSH
+  - ufw allow from ${private_cidr} to any port 11434
+  - ufw --force enable

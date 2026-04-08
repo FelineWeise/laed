@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# MANUAL FALLBACK — this script is superseded by infrastructure/terraform/cloud-init/gpu.yaml.tftpl
+# when using Terraform provisioning. Kept for manual bootstrapping of ad-hoc GPU instances.
 set -euo pipefail
 
 COMPOSE_FILE="/opt/gpu-services/docker-compose.yml"

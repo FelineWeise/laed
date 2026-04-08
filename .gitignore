@@ -6,3 +6,10 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 backend/alembic/versions/*.pyc
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+!terraform.tfvars.example
