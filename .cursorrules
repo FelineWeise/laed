@@ -5,35 +5,37 @@ A closed-loop collaboration platform for high-stakes confidential project work (
 
 ## Architecture
 - Backend: FastAPI (Python), Poetry for package management
-- Database: PostgreSQL 16, SQLAlchemy 2.0 + Alembic
+- Database: PostgreSQL 16 + pgvector, SQLAlchemy 2.0 + Alembic
 - File storage: MinIO (S3-compatible, encrypted at rest)
-- Vector DB: ChromaDB (per-project collections)
+- Vector search: pgvector (embeddings stored alongside relational data)
 - Task queue: Celery + Redis
-- LLM: Ollama with Qwen 2.5 14B (on separate GPU server)
-- STT: Faster-Whisper large-v3 (on GPU server)
+- LLM gateway: LiteLLM (routes to Ollama or paid providers)
+- LLM: Ollama with Qwen 2.5 14B (on separate GPU server, open source default)
+- STT: Parakeet TDT 0.6B v3 (CPU, OpenAI-compatible API)
 - Embeddings: nomic-embed-text via Ollama
-- Frontend: Expo (React Native), mobile-first
+- Frontend: Next.js PWA (mobile-first, no native app)
 - Reverse proxy: Caddy with auto-TLS
+- Container registry: Scaleway CR (rg.fr-par.scw.cloud/laed)
 - Infrastructure: Scaleway (Paris) — GP1-XS base server + L4 GPU on-demand
+- IaC: Terraform (infrastructure/terraform/)
 
 ## Infrastructure
 - Base server: Scaleway GP1-XS, PAR-1, IP 51.15.207.5
 - GPU server: Scaleway L4-1-24G (not yet provisioned, on-demand)
-- Both on same Scaleway Private Network
+- Both on same Scaleway Private Network (172.16.0.0/22)
 - Domain: laed.eu
 - SSH key: ~/.id_ed25519-scaleway
+- Tailscale VPN for admin access
 
 ## Key design principles
 - All service communication via HTTP APIs with environment variable URLs
-- Project isolation: each project gets own ChromaDB collection, MinIO bucket, chat rooms
-- No external API calls — everything runs on our infrastructure
-- Mobile-first (Expo/React Native), desktop later
-- Docker Compose for orchestration, Kubernetes deferred
+- Project isolation: each project gets own pgvector-scoped embeddings, MinIO bucket, chat rooms
+- Open source models by default — LiteLLM gateway available for paid provider routing
+- Docker Compose for orchestration, images pushed to Scaleway Container Registry
+- No builds on server — all images built locally and pushed to registry
 
 ## Code conventions
 - Python: Poetry for dependencies, type hints everywhere
 - Always use async/await for database operations
 - JWT auth with project-scoped claims
 - API endpoints follow REST conventions at /api/...
-
-
