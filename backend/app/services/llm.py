@@ -76,18 +76,18 @@ ollama = LLMClient(
 )
 
 
-# ── Convenience functions (use gateway by default) ───────
+# ── Convenience functions (use Ollama by default) ────────
 
 async def llm_chat(messages: list[dict], *, model: str | None = None) -> str:
-    return await gateway.chat(messages, model=model or settings.llm_model)
+    return await ollama.chat(messages, model=model or settings.llm_model)
 
 
 async def llm_stream(
     messages: list[dict], *, model: str | None = None
 ) -> AsyncIterator[str]:
-    async for token in gateway.stream_chat(messages, model=model or settings.llm_model):
+    async for token in ollama.stream_chat(messages, model=model or settings.llm_model):
         yield token
 
 
 async def embed_text(text: str, *, model: str | None = None) -> list[float]:
-    return await gateway.embed(text, model=model or settings.embedding_model)
+    return await ollama.embed(text, model=model or settings.embedding_model)
