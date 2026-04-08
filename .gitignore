@@ -1,5 +1,6 @@
 .env
 .DS_Store
+docs/
 __pycache__/
 *.pyc
 .ruff_cache/
