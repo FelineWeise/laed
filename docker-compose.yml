@@ -13,9 +13,19 @@ services:
       - DOMAIN=${DOMAIN}
     depends_on:
       - app
+      # - frontend  # uncomment when frontend is enabled
     networks:
       - frontend
     restart: always
+
+  # ── Web Frontend (uncomment when frontend/ is initialized) ──
+  # frontend:
+  #   build: ./frontend
+  #   # Or use registry image:
+  #   # image: rg.fr-par.scw.cloud/laed/frontend:latest
+  #   networks:
+  #     - frontend
+  #   restart: always
 
   # ── Application Server ─────────────────────────────────
   app:
@@ -110,6 +120,7 @@ services:
     command: ["--config", "/app/config.yaml"]
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - LITELLM_DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
       - DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
       - OLLAMA_URL=${OLLAMA_URL}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
