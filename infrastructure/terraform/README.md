@@ -212,6 +212,16 @@ terraform output data_dir             # Server-side data directory path
 This separation means Terraform creates a Docker-ready server with credentials
 pre-configured, and you choose what application to deploy on it.
 
+### Cloud-init user data (YAML safety)
+
+The base instance `cloud-init` passes multi-line `.env` and LiteLLM config into a YAML `runcmd` block. Those blobs are **`indent()`-wrapped in Terraform** so every line stays inside the block scalar. If you paste raw `KEY=value` lines into **additional** user data in the Scaleway console, cloud-init will fail to merge configs (and may print secrets in the serial log).
+
+**Updating user data:** Scaleway may apply new `user_data` only on **reinstall** or **instance replacement**, depending on the API behavior. After changing [cloud-init/base.yaml.tftpl](cloud-init/base.yaml.tftpl), run `terraform plan` / `terraform apply` and, if the instance is not recreated, fix user data once in the console or replace the server.
+
+### SSH and serial console
+
+If SSH fails after reboot, verify the login user’s `~/.ssh/authorized_keys` via the **serial console** and ensure your public key is attached in the Scaleway UI. See [docs/OpsGuide.md](../../docs/OpsGuide.md) sections 2.1–2.2.
+
 ## GPU Workflow
 
 The GPU instance is off by default (`gpu_enabled = false`). To use it:

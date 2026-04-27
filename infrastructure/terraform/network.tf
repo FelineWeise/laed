@@ -15,7 +15,7 @@ resource "scaleway_vpc_private_network" "main" {
   tags   = ["terraform", var.project_name]
 
   ipv4_subnet {
-    subnet = "172.16.0.0/22"
+    subnet = "172.16.16.0/22"
   }
 }
 
@@ -68,7 +68,7 @@ resource "scaleway_instance_security_group" "gpu" {
     action   = "accept"
     port     = 11434
     protocol = "TCP"
-    ip_range = "172.16.0.0/22"
+    ip_range = "172.16.16.0/22"
   }
 
   tags = ["terraform", var.project_name]

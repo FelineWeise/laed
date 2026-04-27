@@ -1,0 +1,51 @@
+{
+  "mode": "merge",
+  "providers": {
+    "litellm": {
+      "baseUrl": "http://litellm:4000/v1",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "laed-chat",
+          "name": "LAED Chat (local primary; LiteLLM falls back to laed-fallback on failure)",
+          "input": ["text", "image"],
+          "reasoning": false,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        },
+        {
+          "id": "laed-fast",
+          "name": "LAED Fast (local utility; same fallback chain as laed-chat)",
+          "input": ["text", "image"],
+          "reasoning": false,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        },
+        {
+          "id": "laed-reason",
+          "name": "LAED Reason (local; same fallback chain)",
+          "input": ["text", "image"],
+          "reasoning": false,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        },
+        {
+          "id": "laed-fallback",
+          "name": "LAED Fallback (third-party gateway; THIRDPARTY_LITELLM_URL)",
+          "input": ["text", "image"],
+          "reasoning": false,
+          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "contextWindow": 200000,
+          "maxTokens": 8192,
+          "api": "openai-completions"
+        }
+      ]
+    }
+  }
+}

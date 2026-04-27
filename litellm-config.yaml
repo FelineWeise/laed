@@ -1,0 +1,61 @@
+# LAED LiteLLM proxy — local Ollama models first; third-party OpenAI-compatible gateway on failure.
+#
+# Env (docker-compose):
+#   OLLAMA_URL              — Ollama base (e.g. http://172.16.16.3:11434), no /v1
+#   THIRDPARTY_LITELLM_URL  — Third-party gateway origin only (e.g. https://ai-gateway.example.com);
+#                             litellm appends /v1 for the OpenAI-compatible API.
+#   THIRDPARTY_LITELLM_KEY  — API key accepted by that gateway
+#   LITELLM_MASTER_KEY      — Virtual key for this proxy (must start with sk-)
+#
+# Fallback: after num_retries on the primary model_name, LiteLLM tries laed-fallback (see litellm_settings.fallbacks).
+
+model_list:
+  - model_name: laed-chat
+    litellm_params:
+      model: ollama/qwen2.5:14b-instruct-q4_K_M
+      api_base: ${OLLAMA_URL}
+      timeout: 600
+      stream_timeout: 180
+
+  - model_name: laed-fast
+    litellm_params:
+      model: ollama/qwen2.5:7b-instruct-q4_K_M
+      api_base: ${OLLAMA_URL}
+      timeout: 600
+      stream_timeout: 180
+
+  - model_name: laed-reason
+    litellm_params:
+      model: ollama/qwen2.5:14b-instruct-q4_K_M
+      api_base: ${OLLAMA_URL}
+      timeout: 600
+      stream_timeout: 180
+
+  - model_name: laed-embed
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: ${OLLAMA_URL}
+      timeout: 120
+
+  # Routed only via fallbacks or when client explicitly requests model=laed-fallback.
+  # Forwards to your third-party LiteLLM/OpenAI-compatible deployment; adjust `model` if the gateway uses another ID.
+  - model_name: laed-fallback
+    litellm_params:
+      model: openai/anthropic/claude-opus-4-7
+      api_base: ${THIRDPARTY_LITELLM_URL}/v1
+      api_key: os.environ/THIRDPARTY_LITELLM_KEY
+      timeout: 600
+      stream_timeout: 180
+
+litellm_settings:
+  num_retries: 2
+  request_timeout: 600
+  # When local Ollama fails (timeout, connection, 5xx, etc.), try laed-fallback next.
+  fallbacks:
+    - laed-chat: [laed-fallback]
+    - laed-fast: [laed-fallback]
+    - laed-reason: [laed-fallback]
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/LITELLM_DATABASE_URL

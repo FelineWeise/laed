@@ -5,18 +5,24 @@ model_list:
     litellm_params:
       model: ollama/${llm_model_tag}
       api_base: ${ollama_url}
+      timeout: 600
+      stream_timeout: 180
 
   - model_name: ${project_name}-embed
     litellm_params:
       model: ollama/${embedding_tag}
       api_base: ${ollama_url}
+      timeout: 120
 %{ if anthropic_api_key != "" ~}
 
-  - model_name: ${project_name}-dev
+  - model_name: "anthropic/*"
     litellm_params:
-      model: anthropic/claude-sonnet-4-20250514
+      model: "anthropic/*"
       api_key: os.environ/ANTHROPIC_API_KEY
 %{ endif ~}
+
+litellm_settings:
+  request_timeout: 600
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

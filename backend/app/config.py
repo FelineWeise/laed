@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     llm_gateway_key: str = ""
     llm_model: str = "laed-chat"
     embedding_model: str = "laed-embed"
+    thirdparty_litellm_url: str = "https://ai-gateway.eraneos.com"
+    thirdparty_litellm_key: str = ""
+    model_catalog_ttl_seconds: int = 300
 
     # LLM — direct Ollama (fallback / legacy)
     ollama_url: str = "http://localhost:11434"

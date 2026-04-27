@@ -26,8 +26,9 @@ resource "scaleway_instance_server" "base" {
       scw_secret_key     = var.scw_secret_key
       repo_url           = var.repo_url
       tailscale_auth_key = var.tailscale_auth_key
-      env_content        = local.rendered_env
-      litellm_config     = local.rendered_litellm_config
+      # Indent so multi-line blobs stay inside the YAML | block (unindented lines break cloud-init merge).
+      env_content        = indent(4, local.rendered_env)
+      litellm_config     = indent(4, local.rendered_litellm_config)
     })
   }
 
@@ -72,7 +73,7 @@ resource "scaleway_instance_server" "gpu" {
       project_name    = var.project_name
       llm_model       = var.llm_model
       embedding_model = var.embedding_model
-      private_cidr    = "172.16.0.0/22"
+      private_cidr    = "172.16.16.0/22"
     })
   }
 

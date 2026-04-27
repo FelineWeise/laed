@@ -16,6 +16,7 @@ services:
       # - frontend  # uncomment when frontend is enabled
     networks:
       - frontend
+      - backend
     restart: always
 
   # ── Web Frontend (uncomment when frontend/ is initialized) ──
@@ -86,6 +87,8 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
     networks:
       - backend
     restart: always
@@ -108,6 +111,8 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
     volumes:
       - filedata:/data
+    ports:
+      - "127.0.0.1:9001:9001"
     networks:
       - backend
     restart: always
@@ -123,6 +128,8 @@ services:
       - LITELLM_DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
       - DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
       - OLLAMA_URL=${OLLAMA_URL}
+      - THIRDPARTY_LITELLM_URL=${THIRDPARTY_LITELLM_URL:-}
+      - THIRDPARTY_LITELLM_KEY=${THIRDPARTY_LITELLM_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     ports:
       - "127.0.0.1:4000:4000"
@@ -135,8 +142,6 @@ services:
   # ── Speech-to-Text (Parakeet TDT 0.6B v3) ─────────────
   parakeet:
     image: rg.fr-par.scw.cloud/laed/parakeet:latest
-    ports:
-      - "127.0.0.1:5092:5092"
     volumes:
       - parakeet_models:/app/models
     networks:
@@ -161,6 +166,30 @@ services:
       - openclaw
     restart: always
 
+  # ── Personal AI Assistant (OpenClaw) ────────────────────
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    environment:
+      - LITELLM_API_KEY=${LITELLM_MASTER_KEY}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - OPENAI_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_MODEL=laed-chat
+    volumes:
+      - openclaw_data:/home/node/.openclaw
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "127.0.0.1:18789:18789"
+    networks:
+      - backend
+      - openclaw
+    group_add:
+      - "${DOCKER_GID:-999}"
+    depends_on:
+      - litellm
+    restart: always
+
 volumes:
   caddy_data:
   caddy_config:
@@ -168,6 +197,7 @@ volumes:
   redisdata:
   filedata:
   parakeet_models:
+  openclaw_data:
 
 networks:
   frontend:

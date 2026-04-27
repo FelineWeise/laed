@@ -8,6 +8,19 @@
     handle /sse/* {
         reverse_proxy app:8000
     }
+    # LiteLLM API/admin route
+    handle /admin/litellm/* {
+        uri strip_prefix /admin/litellm
+        reverse_proxy litellm:4000
+    }
+    # Parakeet STT route guarded by basic auth
+    handle /admin/stt/* {
+        basicauth {
+            {$ADMIN_USER} {$ADMIN_PASS_HASH}
+        }
+        uri strip_prefix /admin/stt
+        reverse_proxy parakeet:5092
+    }
     # When frontend is enabled, uncomment below and remove the catch-all to app:
     # handle {
     #     reverse_proxy frontend:3000
