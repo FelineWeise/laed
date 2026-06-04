@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAED — App UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--laed-ink);
+    font-family: var(--laed-font-sans);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  /* top rail of screen shortcuts */
+  .rail {
+    position: sticky; top: 0; z-index: 999; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    background: rgba(26,25,23,0.97); padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); width: 100%;
+  }
+  .rail button {
+    padding: 6px 12px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.5);
+    font-family: inherit; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 1px; transition: all .15s;
+  }
+  .rail button:hover, .rail button.active { background: var(--laed-paper); color: var(--laed-ink); border-color: var(--laed-paper); }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 20px; overflow: hidden; }
+  .scaler { transform: scale(var(--phone-scale, 1)); transform-origin: center center; transition: transform .12s; }
+  @keyframes laedpulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+  @keyframes laedwave  { 0%,100%{height:4px} 50%{height:20px} }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  #root { display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="PhoneShell.jsx"></script>
+<script type="text/babel" src="Canvas.jsx"></script>
+<script type="text/babel" src="AIVoice.jsx"></script>
+<script type="text/babel" src="Recording.jsx"></script>
+<script type="text/babel" src="Room.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const INITIAL_MSGS = [
+  { kind: 'them', sender: 'Josephine', text: "I've reviewed the floorplans. The colonnade ratio needs adjustment.", time: '09:14' },
+  { kind: 'me', text: "Agreed — I'll have the revised drawings by Thursday.", time: '09:31' },
+  { kind: 'ai', text: "Open commitment: revised drawings due Thursday. I'll flag if not uploaded by 17:00.", time: '09:31' },
+  { kind: 'them', sender: 'Josephine', text: "Perfect. Also — can we confirm the €2.4M deposit trigger?", time: '10:02' },
+  { kind: 'me', text: "Yes, on planning approval. I'll attach the term sheet now.", time: '10:15' },
+];
+
+function App() {
+  const [screen, setScreen] = useState('canvas'); // canvas | sub | ai | rec | room
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [tab, setTab] = useState('Thread');
+  const [msgs, setMsgs] = useState(INITIAL_MSGS);
+
+  const go = (s) => { setMenuOpen(false); setScreen(s); };
+
+  const send = (text) => {
+    setMsgs(m => [...m, { kind: 'me', text, time: 'now' }]);
+  };
+
+  const RAIL = [
+    ['Canvas', () => go('canvas')],
+    ['Drill-in', () => go('sub')],
+    ['AI Voice', () => go('ai')],
+    ['Recording', () => go('rec')],
+    ['Room', () => { setTab('Thread'); go('room'); }],
+  ];
+
+  let view;
+  if (screen === 'canvas') view = (
+    <Canvas
+      menuOpen={menuOpen}
+      onMenu={() => setMenuOpen(o => !o)}
+      onPickMenu={() => setMenuOpen(false)}
+      onCluster={(name) => { if (name === 'SHOREDITCH') go('sub'); else { setTab('Thread'); go('room'); } }}
+      onMic={() => go('ai')}
+      onCall={() => { setTab('Thread'); go('room'); }}
+      onCamera={() => go('rec')}
+    />
+  );
+  else if (screen === 'sub') view = <SubCanvas onBack={() => go('canvas')} onNode={() => { setTab('Files'); go('room'); }} />;
+  else if (screen === 'ai') view = <AIVoice onBack={() => go('canvas')} />;
+  else if (screen === 'rec') view = <Recording onBack={() => { setTab('Thread'); go('room'); }} />;
+  else if (screen === 'room') view = (
+    <Room tab={tab} onTab={setTab} onBack={() => go('canvas')}
+      menuOpen={menuOpen} onMenu={() => setMenuOpen(o => !o)}
+      msgs={msgs} onRecord={() => go('rec')} onSend={send} />
+  );
+
+  return (
+    <React.Fragment>
+      <div className="rail">
+        {RAIL.map(([label, fn]) => {
+          const map = { 'Canvas': 'canvas', 'Drill-in': 'sub', 'AI Voice': 'ai', 'Recording': 'rec', 'Room': 'room' };
+          return <button key={label} className={screen === map[label] ? 'active' : ''} onClick={fn}>{label}</button>;
+        })}
+      </div>
+      <div className="stage"><div className="scaler">{view}</div></div>
+    </React.Fragment>
+  );
+}
+
+function fitPhone() {
+  const rail = document.querySelector('.rail');
+  const railH = rail ? rail.offsetHeight : 50;
+  const avail = window.innerHeight - railH - 48;
+  const scale = Math.min(1, avail / 844);
+  document.documentElement.style.setProperty('--phone-scale', scale.toFixed(3));
+}
+window.addEventListener('resize', fitPhone);
+setTimeout(fitPhone, 50);
+setInterval(fitPhone, 800);
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

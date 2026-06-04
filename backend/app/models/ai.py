@@ -1,5 +1,6 @@
 from sqlalchemy import String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+from typing import Any
 from sqlalchemy.dialects.postgresql import JSONB
 import uuid
 
@@ -20,4 +21,4 @@ class AIMessage(BaseMixin, Base):
     )
     role: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    source_chunks = mapped_column(JSONB, nullable=True)
+    source_chunks: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)

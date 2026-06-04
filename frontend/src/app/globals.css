@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+body {
+  background-color: var(--laed-paper);
+  color: var(--laed-ink);
+  font-family: var(--laed-font-sans);
+  font-size: var(--laed-size-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.laed-label {
+  font-size: var(--laed-size-label);
+  letter-spacing: var(--laed-track-label);
+  text-transform: uppercase;
+  color: var(--laed-muted);
+}
+
+.laed-btn-primary {
+  background: var(--laed-navy);
+  color: #fff;
+  font-size: var(--laed-size-label);
+  letter-spacing: var(--laed-track-label);
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--laed-radius-sm);
+  cursor: pointer;
+}
+
+.laed-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.laed-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--laed-border);
+  padding: 8px 0;
+  font-size: var(--laed-size-body);
+  color: var(--laed-ink);
+  outline: none;
+}
+
+.laed-input:focus {
+  border-bottom-color: var(--laed-navy);
+}

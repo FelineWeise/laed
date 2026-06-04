@@ -1,0 +1,4 @@
+# Mounted into Caddy only (not compose .env). Single $ in bcrypt — Caddy does not use {$VAR} for bare $yZm...
+basic_auth {
+	admin $2a$14$yZmFfk5.qzGtbwjTyfnI0uRJ0ZPc8xKHebVqqr1aC4CzK1os6m4hi
+}

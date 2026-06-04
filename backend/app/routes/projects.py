@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User, Project, ProjectMember, get_db
 from app.auth.dependencies import get_current_user, require_project_role
+from app.services.project_hooks import on_project_created
 from app.schemas import (
     ProjectCreate, ProjectUpdate, ProjectResponse,
     MemberAdd, MemberResponse,
@@ -35,6 +36,8 @@ async def create_project(
         role="owner",
     )
     db.add(membership)
+    await db.flush()
+    await on_project_created(db, project, current_user)
     await db.commit()
     await db.refresh(project)
 

@@ -1,0 +1,14 @@
+# ── laed-base → laed-gpu over laed-private ─────────────────────────────
+# Install on laed-base (append to ~/.ssh/config), or:
+#   mkdir -p ~/.ssh/config.d
+#   cp infra/laed-base/ssh-config-laed-base-gpu.fragment ~/.ssh/config.d/laed-gpu.conf
+# and in ~/.ssh/config add:  Include config.d/laed-gpu.conf
+#
+# Requires the same private key you use from your Mac (e.g. id_ed25519-scaleway)
+# to be present on laed-base. If the GPU private IP changes, update HostName.
+
+Host gpu laed-gpu
+  HostName 172.16.20.2
+  User feline
+  IdentityFile ~/.ssh/id_ed25519-scaleway
+  IdentitiesOnly yes

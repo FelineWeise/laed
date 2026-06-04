@@ -1,0 +1,54 @@
+# Persistent fix: stop DHCP on laed-private (ens7) from re-adding "default metric 50",
+# which beats the public NIC default and breaks SSH to the flexible IP.
+#
+# === Apply on laed-base (Ubuntu 24 + netplan + systemd-networkd) ===
+#
+# 1) Confirm NIC names (public = flexible IP, private = laed-private):
+#    ip -br addr
+#
+# 2) See what netplan already defines (avoid duplicating broken stanzas):
+#    ls /etc/netplan/
+#    sudo cat /etc/netplan/*.yaml
+#
+# 3a) Preferred: add this file if you have NO conflicting ens2/ens7 stanzas.
+#     Copy only from "network:" downward into /etc/netplan/99-laed-route-metrics.yaml,
+#     or copy the whole file (comments are fine). Edit ens2/ens7 if your names differ.
+#
+# 3b) If `sudo netplan try` errors (duplicate id "ens7" / merge conflict):
+#     Edit the EXISTING file under /etc/netplan/ (often 50-cloud-init.yaml) and
+#     under the **public** interface add:
+#       dhcp4-overrides:
+#         route-metric: 50
+#     under the **laed-private** interface add:
+#       dhcp4-overrides:
+#         route-metric: 200
+#     Do not define the same interface twice across files unless netplan accepts merge.
+#
+# 4) Validate and apply (120s auto-revert on failure):
+#     sudo netplan generate
+#     sudo netplan try
+#     # If OK, confirm or wait for timeout; then:
+#     sudo netplan apply
+#
+# 5) Verify (must show ONLY one default per gateway, and public wins for source IP):
+#     ip route show | grep '^default'
+#     ip route get 8.8.8.8 from 51.15.207.5
+#     # Second command must show dev ens2 (your public NIC), not ens7.
+#
+# 6) If an old "metric 50" line is still there, renew or restart the link once:
+#     sudo systemctl restart systemd-networkd
+#     ip route show | grep '^default'
+#
+# === File body (remove all # comment lines above before copying to /etc/netplan) ===
+
+network:
+  version: 2
+  ethernets:
+    ens2:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: 50
+    ens7:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: 200

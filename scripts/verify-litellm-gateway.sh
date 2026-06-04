@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Run on the host where docker compose is used (e.g. server: /home/feline/laed-data).
-# Verifies LiteLLM accepts LITELLM_MASTER_KEY and lists expected model IDs.
+# Verifies LiteLLM on docker network `llm-backbone` from the LAED app container.
+# Run from the LAED compose directory (requires `docker compose up` and llm-gateway running).
 set -euo pipefail
 
 COMPOSE_DIR="${1:-${COMPOSE_DIR:-$(pwd)}}"
@@ -17,32 +17,39 @@ set -a
 source .env
 set +a
 
-if [ -z "${LITELLM_MASTER_KEY:-}" ] || [[ "${LITELLM_MASTER_KEY}" != sk-* ]]; then
-  echo "ERROR: LITELLM_MASTER_KEY must be set in .env and start with sk-" >&2
+KEY="${LLM_GATEWAY_KEY:-${OPENAI_API_KEY:-}}"
+if [ -z "$KEY" ]; then
+  echo "ERROR: set LLM_GATEWAY_KEY or OPENAI_API_KEY in .env (same value as llm-gateway LITELLM_MASTER_KEY)" >&2
   exit 1
 fi
 
-echo "=== GET /v1/models ==="
-code=$(curl -sS -o /tmp/laed-models-out.json -w "%{http_code}" "http://127.0.0.1:4000/v1/models" \
-  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" || true)
-echo "HTTP $code"
-head -c 2000 /tmp/laed-models-out.json
+MODEL="${LLM_MODEL:-ollama/qwen3:4b-instruct}"
+
+echo "=== GET /v1/models (via app container → litellm) ==="
+docker compose exec -T app sh -lc "wget -qO- \"http://litellm:4000/v1/models\" -H \"Authorization: Bearer ${KEY}\" | head -c 2000"
 echo ""
-if [ "$code" != "200" ]; then
-  echo "ERROR: expected HTTP 200 from /v1/models" >&2
-  exit 1
-fi
 echo ""
 
-echo "=== POST /v1/chat/completions (minimal) ==="
-code=$(curl -sS -o /tmp/laed-chat-out.json -w "%{http_code}" "http://127.0.0.1:4000/v1/chat/completions" \
-  -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"laed-chat","messages":[{"role":"user","content":"Reply with exactly: OK"}]}' || true)
-echo "HTTP $code"
-head -c 2000 /tmp/laed-chat-out.json
+echo "=== POST /v1/chat/completions (${MODEL}) ==="
+docker compose exec -T app python - <<PY
+import json, os, urllib.request
+
+base = os.environ["LLM_GATEWAY_URL"].rstrip("/")
+key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("OPENAI_API_KEY")
+model = os.environ.get("LLM_MODEL", "ollama/qwen3:4b-instruct")
+body = json.dumps(
+    {"model": model, "messages": [{"role": "user", "content": "Reply with exactly: OK"}], "stream": False}
+).encode()
+req = urllib.request.Request(
+    f"{base}/chat/completions",
+    data=body,
+    method="POST",
+    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+)
+with urllib.request.urlopen(req, timeout=600) as resp:
+    data = json.loads(resp.read().decode())
+    print(data["choices"][0]["message"]["content"][:500])
+PY
+
 echo ""
-if [ "$code" != "200" ]; then
-  echo "ERROR: expected HTTP 200 from /v1/chat/completions" >&2
-  exit 1
-fi
+echo "verify-litellm-gateway.sh OK"

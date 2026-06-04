@@ -1,0 +1,25 @@
+# Copy to terraform.tfvars (gitignored). Use placeholders only in committed examples.
+environment                  = "prod"
+region                       = "fr-par"
+zone                         = "fr-par-2"
+base_zone                    = "fr-par-1"
+
+scw_access_key               = "SCWXXXXXXXXXXXXXXXX"
+scw_secret_key               = "00000000-0000-0000-0000-000000000000"
+scw_project_id              = "00000000-0000-0000-0000-000000000000"
+
+laed_base_instance_id        = "fr-par-1/00000000-0000-0000-0000-000000000000"
+base_server_private_ip_cidr  = "172.16.20.3/32"
+feline_ssh_pubkey            = "ssh-ed25519 AAAA...comment"
+
+ollama_model_list = [
+  "qwen3:14b-instruct",
+  "qwen3:4b-instruct",
+  "gpt-oss:20b",
+  "qwen2.5vl:7b",
+  "qwen3-embedding:8b",
+  "nomic-embed-text"
+]
+
+idle_timeout_seconds = 900
+max_uptime_seconds   = 21600

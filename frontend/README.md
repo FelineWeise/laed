@@ -1,36 +1,48 @@
-# Frontend (Placeholder)
+# LAED Frontend (v2)
 
-This directory is a placeholder for the web frontend. The intended stack is
-**Next.js + PWA**, serving both desktop browsers and mobile devices from a
-single codebase (no native app builds required).
+Next.js 15 PWA with navy/paper/green UI kit. Routes: auth, global topology canvas, project canvas, room (thread/files/insights), AI voice, record.
 
-## Initialize
+## Scripts
 
 ```bash
-cd frontend
-npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
+npm install
+npm run dev    # http://localhost:3000
+npm run build
+npm run start
 ```
 
-## Integrate with the stack
+## Demo login
 
-1. Uncomment the `frontend` service in `docker-compose.yml`
-2. Swap the Caddy catch-all route in `Caddyfile` from `app:8000` to `frontend:3000`
-3. Build and run: `docker compose up -d --build frontend`
+When the backend has `LAED_DEMO_EMAIL` / `LAED_DEMO_PASSWORD` set (see `laed/.env.example`), the app ensures that user on startup. Sign in at `/login` with those credentials, or set `NEXT_PUBLIC_DEMO_EMAIL` at build time to show “Use demo email” on the login form.
 
-## Registry image
+## Environment
 
-For production, build and push to the Scaleway Container Registry:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEXT_PUBLIC_API_BASE` | `""` | API prefix when frontend and API are on different origins |
+| `NEXT_PUBLIC_DEMO_EMAIL` | `""` | Optional login hint (email only, not password) |
+
+## Design reference
+
+Kit source (read-only): `design-reference/laed-app/`. Tokens: `src/styles/tokens.css`.
+
+## Docker
+
+Local compose (builds from `./frontend`):
 
 ```bash
-docker build --platform linux/amd64 -t rg.fr-par.scw.cloud/<project>/frontend:latest ./frontend
-docker push rg.fr-par.scw.cloud/<project>/frontend:latest
+cd .. && docker compose up -d --build frontend caddy
 ```
 
-Then switch the compose service from `build: ./frontend` to
-`image: rg.fr-par.scw.cloud/<project>/frontend:latest`.
+Production push (Scaleway CR, from `laed/` repo root):
 
-## Reference
+```bash
+./scripts/push_frontend_to_scaleway_registry.sh
+# Or with backend: ./scripts/push_laed_images.sh
+```
 
-See `docs/LAED_Sprint_Guide_v2.md`, section 16 (Day 9-10: Frontend + PWA)
-for the full implementation plan including PWA manifest, service worker, and
-page structure.
+Set `LAED_FRONTEND_IMAGE` in server `.env` to the tag/digest printed by the push script.
+
+## Forgot password
+
+`/forgot-password` explains that self-service reset is not enabled; contact an administrator.

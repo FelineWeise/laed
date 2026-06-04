@@ -1,4 +1,6 @@
 from sqlalchemy import String, Text, BigInteger, Integer, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
+from typing import Any
 from sqlalchemy.orm import Mapped, mapped_column
 from pgvector.sqlalchemy import Vector
 import uuid
@@ -15,6 +17,11 @@ class File(BaseMixin, Base):
     file_size_bytes: Mapped[int | None] = mapped_column(BigInteger)
     minio_key: Mapped[str] = mapped_column(String, nullable=False)
     ingestion_status: Mapped[str] = mapped_column(String, server_default="pending")
+    file_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",
+        JSONB,
+        server_default="{}",
+    )
 
 
 class FileChunk(BaseMixin, Base):

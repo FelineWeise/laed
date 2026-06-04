@@ -1,4 +1,6 @@
 .env
+caddy.auth.env
+scripts/scw-registry.local.env
 .DS_Store
 docs/
 __pycache__/
@@ -7,9 +9,27 @@ __pycache__/
 .pytest_cache/
 backend/alembic/versions/*.pyc
 
+
+
 # Terraform
 *.tfstate
 *.tfstate.backup
 .terraform/
+.tf-local/
 *.tfvars
 !terraform.tfvars.example
+# Infra: common local and temp files to ignore in infra/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/.terragrunt-cache/
+infra/.env
+infra/.DS_Store
+infra/*/terraform.tfvars
+infra/*/*.tfstate
+infra/*/*.tfstate.backup
+infra/*/.terraform/
+infra/*/.terraform.lock.hcl
+infra/*/.env
+infra/*/.DS_Store

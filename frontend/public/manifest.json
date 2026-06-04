@@ -1,0 +1,17 @@
+{
+  "name": "LAED",
+  "short_name": "LAED",
+  "description": "LAED project workspace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F0EC",
+  "theme_color": "#F2F0EC",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

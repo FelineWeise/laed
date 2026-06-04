@@ -1,0 +1,58 @@
+:root {
+  --laed-paper: #f2f0ec;
+  --laed-paper-elevated: #f8f6f2;
+  --laed-ink: #1a1917;
+  --laed-muted: #8a8780;
+  --laed-navy: #1d3a57;
+  --laed-green: #2d6a4f;
+  --laed-border: rgba(26, 25, 23, 0.12);
+  --laed-border-strong: rgba(26, 25, 23, 0.18);
+
+  --laed-font-sans: "Helvetica Neue", Arial, system-ui, sans-serif;
+  --laed-size-label: 9px;
+  --laed-track-label: 1.5px;
+  --laed-size-body: 11px;
+  --laed-radius-sm: 2px;
+  --laed-radius-phone: 44px;
+
+  --laed-shadow-fab: 0 4px 16px rgba(29, 58, 87, 0.25);
+  --laed-shadow-pop: 0 8px 24px rgba(26, 25, 23, 0.12);
+
+  /* Legacy aliases for gradual migration */
+  --laed-bg: var(--laed-paper);
+  --laed-bg-elevated: var(--laed-paper-elevated);
+  --laed-fg: var(--laed-ink);
+  --laed-fg-muted: var(--laed-muted);
+  --laed-accent: var(--laed-navy);
+  --laed-accent-fg: #ffffff;
+  --laed-radius: var(--laed-radius-sm);
+}
+
+@keyframes laedpulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes laedwave {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

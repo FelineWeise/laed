@@ -1,0 +1,150 @@
+#cloud-config
+package_update: true
+
+users:
+  - name: feline
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_pubkey}
+
+write_files:
+  - path: /etc/systemd/system/ollama.service.d/override.conf
+    content: |
+      [Service]
+      Environment="OLLAMA_HOST=0.0.0.0:11434"
+      Environment="OLLAMA_MODELS=/var/lib/ollama/models"
+      Environment="OLLAMA_KEEP_ALIVE=10m"
+      Environment="OLLAMA_NUM_PARALLEL=2"
+
+  - path: /etc/default/laed-gpu-cost-control
+    permissions: "0644"
+    content: |
+      IDLE_TIMEOUT_SECONDS=${idle_timeout_seconds}
+      MAX_UPTIME_SECONDS=${max_uptime_seconds}
+
+  - path: /usr/local/bin/idle-watcher.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      source /etc/default/laed-gpu-cost-control || true
+      LAST_ACTIVITY_FILE="/var/run/gpu-last-activity"
+      IDLE_TIMEOUT="$${IDLE_TIMEOUT_SECONDS:-900}"
+      # Ollama pulls do not POST /heartbeat; model blobs change on disk for a long time.
+      # If anything under models was written recently, treat as active (avoid shutdown mid-pull).
+      MODELDIR=/var/lib/ollama/models
+      if [[ -d "$MODELDIR" ]] && find "$MODELDIR" -type f -mmin -20 -print -quit 2>/dev/null | grep -q .; then
+        date +%s > "$LAST_ACTIVITY_FILE"
+        exit 0
+      fi
+      if [[ ! -f "$LAST_ACTIVITY_FILE" ]]; then
+        date +%s > "$LAST_ACTIVITY_FILE"
+        exit 0
+      fi
+      last=$(cat "$LAST_ACTIVITY_FILE")
+      now=$(date +%s)
+      idle=$((now - last))
+      if (( idle > IDLE_TIMEOUT )); then
+        logger "GPU idle for $${idle}s, shutting down"
+        /sbin/shutdown -h now
+      fi
+
+  - path: /usr/local/bin/uptime-cap.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      source /etc/default/laed-gpu-cost-control || true
+      MAX_UPTIME_SECONDS="$${MAX_UPTIME_SECONDS:-21600}"
+      uptime_s=$(awk '{print int($1)}' /proc/uptime)
+      if (( uptime_s > MAX_UPTIME_SECONDS )); then
+        logger "Uptime cap exceeded ($${uptime_s}s > $${MAX_UPTIME_SECONDS}s), shutting down"
+        /sbin/shutdown -h now
+      fi
+
+  - path: /usr/local/bin/sync-models-to-bucket.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      s3cmd sync --delete-removed /var/lib/ollama/ s3://${models_bucket}/ollama/
+
+  - path: /usr/local/bin/heartbeat.py
+    permissions: "0755"
+    content: |
+      from fastapi import FastAPI
+      import time
+
+      app = FastAPI()
+      LAST_ACTIVITY_FILE = "/var/run/gpu-last-activity"
+
+      @app.post("/heartbeat")
+      def heartbeat():
+          with open(LAST_ACTIVITY_FILE, "w", encoding="utf-8") as handle:
+              handle.write(str(int(time.time())))
+          return {"ok": True}
+
+      @app.get("/healthz")
+      def healthz():
+          return {"ok": True}
+
+  - path: /etc/systemd/system/heartbeat.service
+    content: |
+      [Unit]
+      Description=LAED GPU heartbeat service
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/bin/python3 -m uvicorn heartbeat:app --host 0.0.0.0 --port 11435
+      WorkingDirectory=/usr/local/bin
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/cron.d/laed-gpu
+    content: |
+      */5 * * * * root /usr/local/bin/idle-watcher.sh
+      */10 * * * * root /usr/local/bin/uptime-cap.sh
+      30 3 * * * root /usr/local/bin/sync-models-to-bucket.sh
+
+runcmd:
+  - mkdir -p /var/lib/ollama
+  - |
+    if ! blkid /dev/sdb; then
+      mkfs.ext4 -F /dev/sdb
+    fi
+  - echo '/dev/sdb /var/lib/ollama ext4 defaults,nofail 0 2' >> /etc/fstab
+  - mount /var/lib/ollama
+  - mkdir -p /var/lib/ollama/models
+  # Install creates user/group ollama; service runs as ollama — not feline (see ollama.service User=).
+  - curl -fsSL https://ollama.com/install.sh | sh
+  - chown -R ollama:ollama /var/lib/ollama
+  - systemctl daemon-reload
+  - systemctl enable --now ollama
+  - apt-get install -y s3cmd python3-pip
+  # Do not let pip try to uninstall Debian's typing-extensions (RECORD missing / PEP 668).
+  - python3 -m pip install --break-system-packages --no-cache-dir --ignore-installed typing-extensions fastapi "uvicorn[standard]"
+  - python3 -c "import uvicorn, fastapi"
+  - |
+    cat > /root/.s3cfg <<EOF
+    host_base = s3.${region}.scw.cloud
+    host_bucket = %(bucket)s.s3.${region}.scw.cloud
+    use_https = True
+    EOF
+  - |
+    if [ -z "$(ls -A /var/lib/ollama/models)" ]; then
+      logger "Empty models volume, attempting restore from object storage"
+      s3cmd sync s3://${models_bucket}/ollama/ /var/lib/ollama/ || logger "No backup found; will pull fresh"
+    fi
+  - sudo -u ollama ollama pull qwen3:14b-instruct || logger "Failed to pull qwen3:14b-instruct"
+  - sudo -u ollama ollama pull qwen3:4b-instruct || logger "Failed to pull qwen3:4b-instruct"
+  - sudo -u ollama ollama pull gpt-oss:20b || logger "Failed to pull gpt-oss:20b"
+  - sudo -u ollama ollama pull qwen2.5vl:7b || logger "Failed to pull qwen2.5vl:7b"
+  - sudo -u ollama ollama pull qwen3-embedding:8b || logger "Failed to pull qwen3-embedding:8b"
+  - sudo -u ollama ollama pull nomic-embed-text || logger "Failed to pull nomic-embed-text"
+  - /usr/local/bin/sync-models-to-bucket.sh || true
+  - systemctl enable --now heartbeat

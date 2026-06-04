@@ -7,36 +7,44 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/admin-basicauth.caddy:/etc/caddy/admin-basicauth.caddy:ro
       - caddy_data:/data
       - caddy_config:/config
-    environment:
-      - DOMAIN=${DOMAIN}
+    # Separate file: bcrypt hash contains $ — must not live in compose .env (interpolation breaks it).
+    env_file:
+      - caddy.auth.env
     depends_on:
       - app
-      # - frontend  # uncomment when frontend is enabled
+      - frontend
     networks:
       - frontend
       - backend
+      - llm-backbone
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # ── Web Frontend (uncomment when frontend/ is initialized) ──
-  # frontend:
-  #   build: ./frontend
-  #   # Or use registry image:
-  #   # image: rg.fr-par.scw.cloud/laed/frontend:latest
-  #   networks:
-  #     - frontend
-  #   restart: always
+  # ── Web Frontend ───────────────────────────────────────────
+  frontend:
+    image: ${LAED_FRONTEND_IMAGE:-rg.fr-par.scw.cloud/laed/frontend:latest}
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_DEMO_EMAIL: ${LAED_DEMO_EMAIL:-}
+    networks:
+      - frontend
+    restart: always
 
   # ── Application Server ─────────────────────────────────
   app:
-    image: rg.fr-par.scw.cloud/laed/backend:latest
+    image: ${LAED_BACKEND_IMAGE:-rg.fr-par.scw.cloud/laed/backend:latest}
     environment:
       - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
       - REDIS_URL=redis://redis:6379/0
-      - LLM_GATEWAY_URL=http://litellm:4000/v1
-      - LLM_GATEWAY_KEY=${LITELLM_MASTER_KEY}
-      - OLLAMA_URL=${OLLAMA_URL}
+      - LLM_GATEWAY_URL=${LLM_GATEWAY_URL}
+      - LLM_GATEWAY_KEY=${LLM_GATEWAY_KEY}
+      - RAG_DATABASE_URL=${RAG_DATABASE_URL:-}
+      - LAED_TENANT_ID=${LAED_TENANT_ID:-}
       - MINIO_URL=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
@@ -46,36 +54,41 @@ services:
       - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS:-24}
       - LLM_MODEL=${LLM_MODEL}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - LAED_DEMO_EMAIL=${LAED_DEMO_EMAIL:-}
+      - LAED_DEMO_PASSWORD=${LAED_DEMO_PASSWORD:-}
+      - LAED_DEMO_DISPLAY_NAME=${LAED_DEMO_DISPLAY_NAME:-Demo User}
     depends_on:
       - postgres
       - redis
       - minio
-      - litellm
     networks:
       - frontend
       - backend
+      - llm-backbone
     restart: always
 
   # ── Celery Worker ──────────────────────────────────────
   worker:
-    image: rg.fr-par.scw.cloud/laed/backend:latest
+    image: ${LAED_BACKEND_IMAGE:-rg.fr-par.scw.cloud/laed/backend:latest}
     command: celery -A app.worker worker --loglevel=info --concurrency=2
     environment:
       - DATABASE_URL=postgresql+asyncpg://app:${DB_PASSWORD}@postgres:5432/projectspace
       - REDIS_URL=redis://redis:6379/0
-      - LLM_GATEWAY_URL=http://litellm:4000/v1
-      - LLM_GATEWAY_KEY=${LITELLM_MASTER_KEY}
-      - OLLAMA_URL=${OLLAMA_URL}
+      - LLM_GATEWAY_URL=${LLM_GATEWAY_URL}
+      - LLM_GATEWAY_KEY=${LLM_GATEWAY_KEY}
+      - RAG_DATABASE_URL=${RAG_DATABASE_URL:-}
+      - LAED_TENANT_ID=${LAED_TENANT_ID:-}
       - MINIO_URL=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL}
+      - LLM_MODEL=${LLM_MODEL}
     depends_on:
       - redis
       - postgres
-      - litellm
     networks:
       - backend
+      - llm-backbone
     restart: always
 
   # ── Database (PostgreSQL + pgvector) ───────────────────
@@ -117,78 +130,19 @@ services:
       - backend
     restart: always
 
-  # ── LLM Gateway ────────────────────────────────────────
-  litellm:
-    image: ghcr.io/berriai/litellm:main-latest
-    volumes:
-      - ./litellm-config.yaml:/app/config.yaml
-    command: ["--config", "/app/config.yaml"]
-    environment:
-      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
-      - LITELLM_DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
-      - DATABASE_URL=postgresql://app:${DB_PASSWORD}@postgres:5432/projectspace
-      - OLLAMA_URL=${OLLAMA_URL}
-      - THIRDPARTY_LITELLM_URL=${THIRDPARTY_LITELLM_URL:-}
-      - THIRDPARTY_LITELLM_KEY=${THIRDPARTY_LITELLM_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-    ports:
-      - "127.0.0.1:4000:4000"
-    depends_on:
-      - postgres
-    networks:
-      - backend
-    restart: always
-
   # ── Speech-to-Text (Parakeet TDT 0.6B v3) ─────────────
   parakeet:
     image: rg.fr-par.scw.cloud/laed/parakeet:latest
     volumes:
       - parakeet_models:/app/models
     networks:
-      - backend
+      backend: {}
+      llm-backbone:
+        aliases:
+          - parakeet
     restart: always
-
-  # ── Docker Socket Proxy (for OpenClaw) ─────────────────
-  docker-socket-proxy:
-    image: tecnativa/docker-socket-proxy
-    environment:
-      - CONTAINERS=1
-      - INFO=1
-      - POST=0
-      - EXEC=0
-      - BUILD=0
-      - COMMIT=0
-      - IMAGES=0
-      - VOLUMES=0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - openclaw
-    restart: always
-
-  # ── Personal AI Assistant (OpenClaw) ────────────────────
-  openclaw:
-    image: ghcr.io/openclaw/openclaw:latest
-    environment:
-      - LITELLM_API_KEY=${LITELLM_MASTER_KEY}
-      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
-      - OPENAI_BASE_URL=http://litellm:4000/v1
-      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
-      - OPENAI_MODEL=laed-chat
-    volumes:
-      - openclaw_data:/home/node/.openclaw
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "127.0.0.1:18789:18789"
-    networks:
-      - backend
-      - openclaw
-    group_add:
-      - "${DOCKER_GID:-999}"
-    depends_on:
-      - litellm
-    restart: always
+      - "127.0.0.1:5092:5092"
 
 volumes:
   caddy_data:
@@ -197,9 +151,9 @@ volumes:
   redisdata:
   filedata:
   parakeet_models:
-  openclaw_data:
 
 networks:
   frontend:
   backend:
-  openclaw:
+  llm-backbone:
+    external: true

@@ -1,3 +1,25 @@
+app.cat-id.eu {
+    encode zstd gzip
+    reverse_proxy host.docker.internal:18008
+}
+
+# OpenClaw Control UI — no Caddy basic_auth (breaks wss://; browsers omit Authorization on upgrade).
+# Protect with OPENCLAW_GATEWAY_TOKEN in the UI + gateway.controlUi.allowedOrigins.
+admin.{$DOMAIN} {
+    reverse_proxy openclaw:18789 {
+        flush_interval -1
+        header_up Host {host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
+
+# LiteLLM proxy + Admin UI (/ui)
+litellm.{$DOMAIN} {
+    encode zstd gzip
+    import /etc/caddy/admin-basicauth.caddy
+    reverse_proxy litellm:4000
+}
+
 {$DOMAIN} {
     handle /api/* {
         reverse_proxy app:8000
@@ -8,24 +30,19 @@
     handle /sse/* {
         reverse_proxy app:8000
     }
-    # LiteLLM API/admin route
+
     handle /admin/litellm/* {
         uri strip_prefix /admin/litellm
         reverse_proxy litellm:4000
     }
-    # Parakeet STT route guarded by basic auth
+
     handle /admin/stt/* {
-        basicauth {
-            {$ADMIN_USER} {$ADMIN_PASS_HASH}
-        }
+        import /etc/caddy/admin-basicauth.caddy
         uri strip_prefix /admin/stt
         reverse_proxy parakeet:5092
     }
-    # When frontend is enabled, uncomment below and remove the catch-all to app:
-    # handle {
-    #     reverse_proxy frontend:3000
-    # }
+
     handle {
-        reverse_proxy app:8000
+        reverse_proxy frontend:3000
     }
 }

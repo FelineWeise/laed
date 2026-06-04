@@ -63,6 +63,18 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json()["data"][0]["embedding"]
 
+    async def embed_many(self, texts: list[str], *, model: str) -> list[list[float]]:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{self._base_url}/embeddings",
+                headers=self._headers(),
+                json={"model": model, "input": texts},
+            )
+            resp.raise_for_status()
+            rows = resp.json()["data"]
+            rows.sort(key=lambda r: int(r["index"]))
+            return [r["embedding"] for r in rows]
+
 
 # ── Pre-configured clients ───────────────────────────────
 
@@ -71,23 +83,19 @@ gateway = LLMClient(
     api_key=settings.llm_gateway_key,
 )
 
-ollama = LLMClient(
-    base_url=f"{settings.ollama_url}/v1",
-)
 
-
-# ── Convenience functions (use Ollama by default) ────────
+# ── Convenience functions (use gateway by default) ────────
 
 async def llm_chat(messages: list[dict], *, model: str | None = None) -> str:
-    return await ollama.chat(messages, model=model or settings.llm_model)
+    return await gateway.chat(messages, model=model or settings.llm_model)
 
 
 async def llm_stream(
     messages: list[dict], *, model: str | None = None
 ) -> AsyncIterator[str]:
-    async for token in ollama.stream_chat(messages, model=model or settings.llm_model):
+    async for token in gateway.stream_chat(messages, model=model or settings.llm_model):
         yield token
 
 
 async def embed_text(text: str, *, model: str | None = None) -> list[float]:
-    return await ollama.embed(text, model=model or settings.embedding_model)
+    return await gateway.embed(text, model=model or settings.embedding_model)

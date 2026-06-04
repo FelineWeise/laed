@@ -6,6 +6,7 @@ celery_app = Celery(
     "laed",
     broker=settings.redis_url,
     backend=settings.redis_url,
+    include=["app.services.ingestion"],
 )
 
 celery_app.conf.update(
@@ -17,5 +18,3 @@ celery_app.conf.update(
     task_acks_late=True,
     worker_prefetch_multiplier=1,
 )
-
-celery_app.autodiscover_tasks(["app.services"])

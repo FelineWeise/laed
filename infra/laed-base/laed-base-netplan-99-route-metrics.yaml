@@ -1,0 +1,20 @@
+# Install on laed-base as /etc/netplan/99-laed-route-metrics.yaml
+# Merges with 50-cloud-init.yaml when only ens2 is defined there (Scaleway + laed-private).
+#
+# From this repo on laed-base:
+#   sudo cp infra/laed-base/laed-base-netplan-99-route-metrics.yaml /etc/netplan/99-laed-route-metrics.yaml
+#   sudo chmod 600 /etc/netplan/99-laed-route-metrics.yaml
+#   sudo netplan generate && sudo netplan try
+#
+# Replace ens7 with your laed-private NIC if different (`ip -br addr`).
+
+network:
+  version: 2
+  ethernets:
+    ens2:
+      dhcp4-overrides:
+        route-metric: 50
+    ens7:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: 200
