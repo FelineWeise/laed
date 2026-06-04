@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File as UploadFileParam, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_project_role
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/projects", tags=["transcribe"])
 @router.post("/{project_id}/transcribe", status_code=status.HTTP_201_CREATED)
 async def transcribe_audio(
     project_id: UUID,
-    audio: UploadFile = File(...),
+    audio: UploadFile = UploadFileParam(...),
     current_user: User = Depends(get_current_user),
     _member: ProjectMember = Depends(require_project_role("member")),
     db: AsyncSession = Depends(get_db),

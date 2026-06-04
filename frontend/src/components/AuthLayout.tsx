@@ -9,7 +9,7 @@ type Props = {
 
 export function AuthLayout({ title, subtitle, children, footer }: Props) {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[390px] flex-col justify-center bg-[var(--laed-paper)] px-8 py-12">
+    <main className="laed-shell laed-shell--narrow mx-auto flex min-h-screen flex-col justify-center bg-[var(--laed-paper)] px-8 py-12 md:px-12">
       <p className="laed-label mb-2">LAED</p>
       <h1 className="text-lg font-bold tracking-[2px] text-[var(--laed-ink)] uppercase">
         {title}

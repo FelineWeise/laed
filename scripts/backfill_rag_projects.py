@@ -11,7 +11,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.models.project import Project
 from app.models.base import async_session
-from app.services.rag_registry import EMBEDDING_DIM_NOMIC, ensure_rag_project
+from app.services.rag_registry import EMBEDDING_DIM_NOMIC, ensure_rag_project, ensure_rag_tenant
 from app.services.rag_retriever import rag_session_factory
 
 
@@ -28,6 +28,7 @@ async def main() -> int:
 
     factory = rag_session_factory()
     async with factory() as rag_session:
+        await ensure_rag_tenant(rag_session, tenant_id=settings.laed_tenant_id)
         for project in projects:
             await ensure_rag_project(
                 rag_session,

@@ -1,6 +1,7 @@
 from sqlalchemy import String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import ARRAY
 import uuid
 from datetime import datetime
 
@@ -11,6 +12,7 @@ class Project(BaseMixin, Base):
     __tablename__ = "projects"
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String), server_default="{}")
     created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     ownership_model: Mapped[str] = mapped_column(String, server_default="owned")
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, Project, ProjectMember, get_db
 from app.auth.dependencies import get_current_user, require_project_role
 from app.services.project_hooks import on_project_created
+from app.services.project_delete import delete_project_completely
 from app.schemas import (
     ProjectCreate, ProjectUpdate, ProjectResponse,
     MemberAdd, MemberResponse,
@@ -82,12 +84,31 @@ async def update_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
     updates = body.model_dump(exclude_unset=True)
+    if "archived" in updates:
+        archived = updates.pop("archived")
+        if archived is True:
+            project.archived_at = datetime.now(timezone.utc)
+        elif archived is False:
+            project.archived_at = None
     for field, value in updates.items():
         setattr(project, field, value)
 
     await db.commit()
     await db.refresh(project)
     return project
+
+
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(
+    project_id: UUID,
+    _member: ProjectMember = Depends(require_project_role("owner")),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await db.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    await delete_project_completely(db, project_id)
+    await db.commit()
 
 
 # ── Membership ───────────────────────────────────────────
@@ -124,6 +145,7 @@ async def add_member(
         role=membership.role,
         joined_at=membership.joined_at,
         display_name=invitee.display_name,
+        email=invitee.email,
     )
 
 
@@ -134,7 +156,7 @@ async def list_members(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(ProjectMember, User.display_name)
+        select(ProjectMember, User.display_name, User.email)
         .join(User, User.id == ProjectMember.user_id)
         .where(ProjectMember.project_id == project_id)
     )
@@ -145,8 +167,9 @@ async def list_members(
             role=pm.role,
             joined_at=pm.joined_at,
             display_name=name,
+            email=email,
         )
-        for pm, name in rows
+        for pm, name, email in rows
     ]
 
 
@@ -154,7 +177,7 @@ async def list_members(
 async def remove_member(
     project_id: UUID,
     user_id: UUID,
-    _member: ProjectMember = Depends(require_project_role("owner")),
+    _member: ProjectMember = Depends(require_project_role("admin")),
     db: AsyncSession = Depends(get_db),
 ):
     membership = await db.get(ProjectMember, (project_id, user_id))

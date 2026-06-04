@@ -9,9 +9,16 @@ from app.models.base import Base, BaseMixin
 
 class AIConversation(BaseMixin, Base):
     __tablename__ = "ai_conversations"
-    project_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("projects.id"), nullable=False)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("projects.id"), nullable=True
+    )
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     is_private: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    title: Mapped[str | None] = mapped_column(String, nullable=True)
+    topic_node_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("topology_nodes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
 
 class AIMessage(BaseMixin, Base):

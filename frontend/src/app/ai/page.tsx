@@ -7,7 +7,8 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { BottomBar } from "@/components/BottomBar";
 import { apiFetch } from "@/lib/api";
 import { useAiStream } from "@/lib/hooks/useAiStream";
-import type { AiMessage, Conversation, Project, SourceChunk } from "@/lib/types";
+import { MessageSources } from "@/components/MessageSources";
+import type { AiMessage, Conversation, Project } from "@/lib/types";
 
 function ContextChip({ label }: { label: string }) {
   return (
@@ -25,7 +26,6 @@ export default function AiPage() {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [streamText, setStreamText] = useState("");
-  const [lastSources, setLastSources] = useState<SourceChunk[]>([]);
   const { streamMessage, streaming, error } = useAiStream();
 
   useEffect(() => {
@@ -66,7 +66,6 @@ export default function AiPage() {
     const userText = draft.trim();
     setDraft("");
     setStreamText("");
-    setLastSources([]);
     setMessages((prev) => [
       ...prev,
       {
@@ -80,15 +79,22 @@ export default function AiPage() {
     ]);
 
     const result = await streamMessage(
-      projectId,
-      conversationId,
-      userText,
-      null,
+      {
+        projectId,
+        conversationId,
+        content: userText,
+        topicNodeId: null,
+        retrievalScope: {
+          level: "project",
+          project_ids: [projectId],
+          session_scope_id: conversationId,
+          include_constituent_topics: true,
+        },
+      },
       (token) => setStreamText((s) => s + token),
     );
 
     if (result !== null) {
-      setLastSources(result.sourceChunks);
       setMessages((prev) => [
         ...prev,
         {
@@ -147,15 +153,7 @@ export default function AiPage() {
                   >
                     {m.content}
                   </div>
-                  {m.source_chunks && m.source_chunks.length > 0 ? (
-                    <p className="mt-1 text-[8px] text-[var(--laed-muted)]">
-                      Sources:{" "}
-                      {m.source_chunks
-                        .map((s) => s.filename)
-                        .filter(Boolean)
-                        .join(", ")}
-                    </p>
-                  ) : null}
+                  <MessageSources chunks={m.source_chunks} />
                 </div>
               </div>
             ),
@@ -183,13 +181,13 @@ export default function AiPage() {
         {error !== null ? (
           <p className="px-4 text-[10px] text-red-700">{error}</p>
         ) : null}
-        <div className="fixed bottom-0 left-1/2 z-[150] flex w-full max-w-[390px] -translate-x-1/2 items-center justify-center gap-3 border-t border-[var(--laed-border)] bg-[var(--laed-paper)] px-4 py-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <div className="fixed bottom-0 left-0 right-0 z-[150] flex w-full items-center justify-center gap-3 border-t border-[var(--laed-border)] bg-[var(--laed-paper)] px-4 py-4 pb-[max(20px,env(safe-area-inset-bottom))]">
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             disabled={streaming}
             placeholder="Ask about project docs…"
-            className="laed-input max-w-[260px] flex-1 rounded-full border border-[var(--laed-border)] px-3.5 py-2"
+            className="laed-input-pill max-w-[260px] flex-1"
           />
           <button
             type="button"
@@ -201,11 +199,6 @@ export default function AiPage() {
             ●
           </button>
         </div>
-        {lastSources.length > 0 ? (
-          <p className="px-4 pb-2 text-[8px] text-[var(--laed-muted)]">
-            Cited: {lastSources.map((s) => s.filename).join(", ")}
-          </p>
-        ) : null}
         <BottomBar />
       </AppShell>
     </AuthGuard>

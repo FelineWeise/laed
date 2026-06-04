@@ -7,7 +7,8 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.config import settings
-from app.services.rag_retriever import ChunksTable, RagRetriever
+from app.services.rag_registry import ChunksTable
+from app.services.retrieval.retriever import RagRetriever
 
 DEFAULT_CHUNKS_TABLE: ChunksTable = "rag.chunks_nomic"
 
@@ -37,7 +38,7 @@ def build_source_chunks(
     max_excerpt_len: int = 400,
 ) -> list[dict[str, object]]:
     """Shape hits for `ai_messages.source_chunks` and SSE done event."""
-    out: list[dict[str, object]] = []
+    best_by_doc: dict[str, dict[str, object]] = {}
     for hit in hits:
         meta = hit.get("metadata")
         meta_dict: dict[str, object] = meta if isinstance(meta, dict) else {}
@@ -58,5 +59,15 @@ def build_source_chunks(
             "distance": float(distance) if isinstance(distance, (int, float)) else None,
             "topic_node_id": topic_node_id,
         }
-        out.append(entry)
-    return out
+        key = str(document_id) if document_id is not None else str(filename)
+        prev = best_by_doc.get(key)
+        if prev is None:
+            best_by_doc[key] = entry
+            continue
+        prev_dist = prev.get("distance")
+        new_dist = entry.get("distance")
+        if isinstance(new_dist, (int, float)) and (
+            not isinstance(prev_dist, (int, float)) or new_dist < prev_dist
+        ):
+            best_by_doc[key] = entry
+    return list(best_by_doc.values())

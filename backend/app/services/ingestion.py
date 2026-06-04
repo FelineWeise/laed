@@ -10,14 +10,15 @@ from uuid import UUID
 from app.config import settings
 from app.models.base import async_session
 from app.models.file import File
+from app.models.folder import Folder
 from app.models.project import Project
 from app.services.file_service import download_bytes
 from app.services.rag_registry import EMBEDDING_DIM_NOMIC, ensure_rag_project
-from app.services.rag_retriever import ChunkIn, rag_session_factory
-from app.services.rag_retriever import RagRetriever
+from app.services.retrieval.retriever import ChunkIn, RagRetriever, rag_session_factory
+from app.services.rag import DEFAULT_CHUNKS_TABLE
 from app.worker import celery_app
 
-CHUNKS_TABLE = "rag.chunks_nomic"
+CHUNKS_TABLE = DEFAULT_CHUNKS_TABLE
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
@@ -67,9 +68,15 @@ async def _ingest_async(file_id: UUID) -> None:
             raw = download_bytes(file_row.minio_key)
             text = _extract_text(file_row.filename, raw)
             parts = _chunk_text(text)
-            meta = file_row.file_metadata or {}
+            meta = dict(file_row.file_metadata or {})
             topic_raw = meta.get("topic_node_id")
             topic_node_id = str(topic_raw) if topic_raw else None
+            folder_id = str(file_row.folder_id)
+            folder_path = meta.get("folder_path")
+            if not folder_path:
+                folder_row = await db.get(Folder, file_row.folder_id)
+                folder_path = folder_row.path if folder_row else None
+            uploaded_by = str(file_row.uploaded_by) if file_row.uploaded_by else None
 
             project = await db.get(Project, file_row.project_id)
             project_name = project.name if project else str(file_row.project_id)
@@ -101,6 +108,10 @@ async def _ingest_async(file_id: UUID) -> None:
                     "file_id": str(file_row.id),
                     "filename": file_row.filename,
                     "topic_node_id": topic_node_id,
+                    "folder_id": folder_id,
+                    "folder_path": folder_path,
+                    "uploaded_by": uploaded_by,
+                    "visibility_scope": "private" if file_row.is_private else "project",
                     "source": "file",
                 }
                 chunks.append(
@@ -108,12 +119,18 @@ async def _ingest_async(file_id: UUID) -> None:
                 )
 
             content_hash = hashlib.sha256(raw).hexdigest()
+            doc_meta = {**meta, "folder_id": folder_id, "folder_path": folder_path}
             await retriever.upsert_document_chunks(
                 str(file_row.id),
                 chunks,
                 source_uri=file_row.minio_key,
                 content_hash=content_hash,
-                document_metadata=meta,
+                document_metadata=doc_meta,
+                topic_node_id=topic_node_id,
+                folder_id=folder_id,
+                uploaded_by=uploaded_by,
+                visibility_scope="private" if file_row.is_private else "project",
+                folder_path=str(folder_path) if folder_path else None,
             )
             file_row.ingestion_status = "ready"
         except Exception:

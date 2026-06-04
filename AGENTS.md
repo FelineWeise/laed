@@ -1,5 +1,7 @@
 # LAED — agent baseline
 
+Scoped Cursor rules: `.cursor/rules/*.mdc`. After plan execution, agents output a context-specific deploy checklist (`post-plan-deploy-handoff.mdc`).
+
 Secure collaboration platform (laed.eu). Backend at `/opt/laed` on `laed-base`,
 on external network `llm-backbone` alongside llm-gateway and OpenClaw.
 

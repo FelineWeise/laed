@@ -5,6 +5,9 @@
   --laed-muted: #8a8780;
   --laed-navy: #1d3a57;
   --laed-green: #2d6a4f;
+  --laed-private: #1b4332;
+  --laed-private-bg: rgba(27, 67, 50, 0.08);
+  --laed-private-border: rgba(27, 67, 50, 0.35);
   --laed-border: rgba(26, 25, 23, 0.12);
   --laed-border-strong: rgba(26, 25, 23, 0.18);
 
@@ -12,11 +15,32 @@
   --laed-size-label: 9px;
   --laed-track-label: 1.5px;
   --laed-size-body: 11px;
+  --laed-size-input: 10px;
+  --laed-size-placeholder: 10px;
+  --laed-size-caption: 8px;
+  --laed-input-height: 40px;
+  --laed-input-padding-x: 14px;
+  --laed-input-radius-pill: 20px;
   --laed-radius-sm: 2px;
   --laed-radius-phone: 44px;
 
   --laed-shadow-fab: 0 4px 16px rgba(29, 58, 87, 0.25);
   --laed-shadow-pop: 0 8px 24px rgba(26, 25, 23, 0.12);
+  --laed-bottom-bar-offset: calc(72px + env(safe-area-inset-bottom, 0px));
+
+  --laed-size-nav: 10px;
+  --laed-bubble-me-bg: var(--laed-navy);
+  --laed-bubble-me-fg: #ffffff;
+  --laed-bubble-them-0-bg: #e8e4dc;
+  --laed-bubble-them-0-fg: var(--laed-ink);
+  --laed-bubble-them-1-bg: rgba(29, 58, 87, 0.12);
+  --laed-bubble-them-1-fg: var(--laed-navy);
+  --laed-bubble-them-2-bg: rgba(45, 106, 79, 0.14);
+  --laed-bubble-them-2-fg: var(--laed-green);
+  --laed-bubble-them-3-bg: #d8d4cc;
+  --laed-bubble-them-3-fg: var(--laed-ink);
+  --laed-bubble-anon-bg: rgba(138, 135, 128, 0.2);
+  --laed-bubble-anon-fg: var(--laed-ink);
 
   /* Legacy aliases for gradual migration */
   --laed-bg: var(--laed-paper);

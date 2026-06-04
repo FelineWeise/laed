@@ -58,6 +58,31 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("LAED_DEMO_DISPLAY_NAME"),
     )
 
+    search_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("SEARCH_ENABLED"),
+    )
+    search_provider: str = Field(
+        default="tavily",
+        validation_alias=AliasChoices("SEARCH_PROVIDER"),
+    )
+    tavily_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("TAVILY_API_KEY"),
+    )
+    serper_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("SERPER_API_KEY"),
+    )
+    ai_history_max_chars: int = Field(
+        default=12000,
+        validation_alias=AliasChoices("AI_HISTORY_MAX_CHARS"),
+    )
+    ai_max_tokens: int = Field(
+        default=800,
+        validation_alias=AliasChoices("AI_MAX_TOKENS"),
+    )
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

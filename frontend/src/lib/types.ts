@@ -35,6 +35,18 @@ export type Project = {
   created_at: string;
   ownership_model: string;
   created_by: string;
+  tags?: string[];
+};
+
+export type MentionSnapshot = {
+  user_id: string;
+  display_name: string;
+};
+
+export type ReplyPreview = {
+  id: string;
+  content: string;
+  sender_label: string;
 };
 
 export type ChatMessage = {
@@ -42,10 +54,71 @@ export type ChatMessage = {
   project_id: string;
   content: string;
   is_anonymous: boolean;
+  message_type?: string;
   topic_node_id: string | null;
+  thread_session_id?: string | null;
   sender_label: string | null;
   user_id: string | null;
   created_at: string;
+  source_chunks?: SourceChunk[] | null;
+  reply_to_id?: string | null;
+  mentions?: MentionSnapshot[];
+  reply_preview?: ReplyPreview | null;
+};
+
+export type InboxMention = {
+  id: string;
+  message_id: string;
+  project_id: string;
+  project_name: string;
+  topic_node_id: string | null;
+  thread_session_id: string | null;
+  thread_title: string;
+  sender_label: string;
+  excerpt: string;
+  created_at: string;
+  read_at: string | null;
+};
+
+export type ThreadSession = {
+  id: string;
+  project_id: string;
+  topic_node_id: string | null;
+  title: string;
+  ai_enabled: boolean;
+  created_by: string;
+  created_at: string;
+};
+
+export type GridSection = {
+  id: string;
+  user_id: string;
+  name: string;
+  sort_order: number;
+  tag_filters: string[];
+  bounds: { x: number; y: number; w: number; h: number } | null;
+  created_at: string;
+};
+
+export type ExplicitContextItem = {
+  type: "file" | "folder" | "thread" | "ai_conversation" | "project" | "topic" | "harness_excerpt";
+  ref_id: string;
+  label: string;
+};
+
+export type CaptureSession = {
+  id: string;
+  user_id: string;
+  kind: "spoken" | "camera";
+  title: string;
+  status: string;
+  project_id: string | null;
+  topic_node_id: string | null;
+  transcript: string;
+  is_private: boolean;
+  metadata: Record<string, string | number | boolean | null>;
+  created_at: string;
+  ended_at: string | null;
 };
 
 export type ProjectFile = {
@@ -56,6 +129,7 @@ export type ProjectFile = {
   file_size_bytes: number | null;
   minio_key: string;
   ingestion_status: string;
+  is_private?: boolean;
   metadata: Record<string, string | null>;
   created_at: string;
 };
@@ -89,8 +163,37 @@ export type AiMessage = {
 
 export type Conversation = {
   id: string;
-  project_id: string;
+  project_id: string | null;
   user_id: string;
   is_private: boolean;
+  title?: string | null;
+  topic_node_id?: string | null;
   created_at: string;
+};
+
+export type UserSearchResult = {
+  id: string;
+  email: string;
+  display_name: string;
+};
+
+export type Member = {
+  user_id: string;
+  role: string;
+  joined_at: string;
+  display_name: string | null;
+  email: string | null;
+};
+
+export type ProjectInvitation = {
+  id: string;
+  project_id: string;
+  inviter_id: string;
+  invitee_email: string;
+  invitee_user_id: string | null;
+  role: string;
+  status: string;
+  created_at: string;
+  responded_at: string | null;
+  project_name: string | null;
 };

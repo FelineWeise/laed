@@ -6,7 +6,7 @@ celery_app = Celery(
     "laed",
     broker=settings.redis_url,
     backend=settings.redis_url,
-    include=["app.services.ingestion"],
+    include=["app.services.ingestion", "app.services.conversation_index"],
 )
 
 celery_app.conf.update(

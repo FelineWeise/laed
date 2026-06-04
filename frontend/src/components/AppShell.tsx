@@ -28,7 +28,7 @@ export function AppShell({
 }: Props) {
   return (
     <div
-      className={`relative mx-auto flex min-h-screen w-full max-w-[390px] flex-col bg-[var(--laed-paper)] ${className}`}
+      className={`laed-shell relative mx-auto flex min-h-dvh flex-col bg-[var(--laed-paper)] ${className}`}
     >
       <header className="relative z-[250] flex h-10 shrink-0 items-center justify-between px-[18px] pt-2">
         {breadcrumb ? (
@@ -61,7 +61,9 @@ export function AppShell({
           <span className="w-7" />
         )}
       </header>
-      <div className="relative min-h-0 flex-1">{children}</div>
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 # ── Auth ─────────────────────────────────────────────────
@@ -45,6 +45,8 @@ class ProjectCreate(ProjectBase):
 class ProjectUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
+    tags: list[str] | None = None
+    archived: bool | None = None
 
 
 class ProjectResponse(ProjectBase):
@@ -52,6 +54,7 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     ownership_model: str
     created_by: UUID
+    tags: list[str] = []
 
     model_config = {"from_attributes": True}
 
@@ -72,5 +75,6 @@ class MemberResponse(BaseModel):
     role: str
     joined_at: datetime
     display_name: str | None = None
+    email: str | None = None
 
     model_config = {"from_attributes": True}

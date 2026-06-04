@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { GridBg } from "@/components/GridBg";
 import type { Position, TopologyEdge, TopologyNode } from "@/lib/types";
+
+export type NodeBadge = { initials: string };
 
 type Props = {
   nodes: TopologyNode[];
@@ -10,10 +12,12 @@ type Props = {
   center?: Position;
   onNodeTap: (node: TopologyNode) => void;
   onNodeDragEnd?: (nodeId: string, position: Position) => void;
+  allowProjectDrag?: boolean;
+  fillHeight?: boolean;
+  positionOverrides?: Record<string, Position>;
+  badgesByNodeId?: Record<string, NodeBadge[]>;
   gridId?: string;
 };
-
-const DEFAULT_CENTER = { x: 195, y: 390 };
 
 function metaSubtitle(node: TopologyNode): string {
   const sub = node.metadata.subtitle;
@@ -25,11 +29,17 @@ function metaSubtitle(node: TopologyNode): string {
 export function TopologyCanvas({
   nodes,
   edges,
-  center = DEFAULT_CENTER,
+  center,
   onNodeTap,
   onNodeDragEnd,
+  allowProjectDrag = false,
+  fillHeight = false,
+  positionOverrides,
+  badgesByNodeId,
   gridId = "topology-grid",
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [viewCenter, setViewCenter] = useState<Position>({ x: 400, y: 300 });
   const dragRef = useRef<{
     nodeId: string;
     startX: number;
@@ -38,9 +48,27 @@ export function TopologyCanvas({
   } | null>(null);
   const [localPos, setLocalPos] = useState<Record<string, Position>>({});
 
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (el === null) return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      setViewCenter(
+        center ?? { x: Math.round(width / 2), y: Math.round(height / 2) },
+      );
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [center]);
+
   const getPos = useCallback(
-    (node: TopologyNode): Position => localPos[node.id] ?? node.position,
-    [localPos],
+    (node: TopologyNode): Position =>
+      localPos[node.id] ??
+      positionOverrides?.[node.id] ??
+      node.position,
+    [localPos, positionOverrides],
   );
 
   const onPointerDown = (
@@ -49,7 +77,7 @@ export function TopologyCanvas({
     clientY: number,
     e: React.PointerEvent,
   ) => {
-    if (node.node_type === "project" || !onNodeDragEnd) return;
+    if ((node.node_type === "project" && !allowProjectDrag) || !onNodeDragEnd) return;
     e.stopPropagation();
     dragRef.current = {
       nodeId: node.id,
@@ -78,9 +106,14 @@ export function TopologyCanvas({
     dragRef.current = null;
   };
 
+  const heightClass = fillHeight
+    ? "relative min-h-0 flex-1 w-full overflow-hidden"
+    : "relative h-[min(70vh,600px)] w-full overflow-hidden";
+
   return (
     <div
-      className="relative h-[min(70vh,600px)] w-full overflow-hidden"
+      ref={containerRef}
+      className={heightClass}
       onPointerMove={(e) => onPointerMove(e.clientX, e.clientY)}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
@@ -96,10 +129,10 @@ export function TopologyCanvas({
           return (
             <line
               key={edge.id}
-              x1={center.x + sp.x}
-              y1={center.y + sp.y}
-              x2={center.x + tp.x}
-              y2={center.y + tp.y}
+              x1={viewCenter.x + sp.x}
+              y1={viewCenter.y + sp.y}
+              x2={viewCenter.x + tp.x}
+              y2={viewCenter.y + tp.y}
               stroke="rgba(26,25,23,0.10)"
               strokeWidth={1}
             />
@@ -107,8 +140,8 @@ export function TopologyCanvas({
         })}
         {nodes.map((node) => {
           const pos = getPos(node);
-          const cx = center.x + pos.x;
-          const cy = center.y + pos.y;
+          const cx = viewCenter.x + pos.x;
+          const cy = viewCenter.y + pos.y;
           const isProject = node.node_type === "project";
           const isTopic = node.node_type === "topic";
           const r = isProject ? 46 : 38;
@@ -157,6 +190,52 @@ export function TopologyCanvas({
                   r={4.5}
                   fill="var(--laed-navy)"
                 />
+              ) : null}
+              {(badgesByNodeId?.[node.id] ?? []).slice(0, 4).map((badge, bi) => {
+                const n = badgesByNodeId?.[node.id]?.length ?? 0;
+                const startAngle = Math.PI * 0.85;
+                const endAngle = Math.PI * 0.15;
+                const t =
+                  n <= 1
+                    ? 0.5
+                    : bi / Math.max(Math.min(n, 4) - 1, 1);
+                const angle = startAngle + t * (endAngle - startAngle);
+                const br = 7;
+                const bx = cx + Math.cos(angle) * (r + 6);
+                const by = cy + Math.sin(angle) * (r + 6);
+                return (
+                  <g key={`${node.id}-badge-${bi}`}>
+                    <circle
+                      cx={bx}
+                      cy={by}
+                      r={br}
+                      fill="var(--laed-navy)"
+                      stroke="white"
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={bx}
+                      y={by + 2.5}
+                      textAnchor="middle"
+                      fontSize={6}
+                      fontWeight={600}
+                      fill="white"
+                    >
+                      {badge.initials}
+                    </text>
+                  </g>
+                );
+              })}
+              {(badgesByNodeId?.[node.id]?.length ?? 0) > 4 ? (
+                <text
+                  x={cx}
+                  y={cy - r - 14}
+                  textAnchor="middle"
+                  fontSize={6}
+                  fill="#8A8780"
+                >
+                  +{(badgesByNodeId?.[node.id]?.length ?? 0) - 4}
+                </text>
               ) : null}
               <text
                 x={cx}

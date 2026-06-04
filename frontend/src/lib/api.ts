@@ -39,6 +39,26 @@ function apiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_BASE ?? "";
 }
 
+/** WebSocket origin aligned with REST (`NEXT_PUBLIC_API_BASE` when set). */
+export function apiWebSocketUrl(path: string): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const base = apiBaseUrl();
+  if (base.length > 0) {
+    const httpBase =
+      base.startsWith("http://") || base.startsWith("https://")
+        ? base
+        : `https://${base}`;
+    const parsed = new URL(httpBase);
+    const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${parsed.host}${normalized}`;
+  }
+  if (typeof window === "undefined") {
+    return "";
+  }
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}${normalized}`;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {},

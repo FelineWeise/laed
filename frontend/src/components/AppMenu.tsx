@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArchiveIcon,
@@ -11,7 +12,8 @@ import {
 } from "@/components/icons";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
-import type { Project } from "@/lib/types";
+import { useMentionsInbox } from "@/lib/hooks/useMentionsInbox";
+import type { InboxMention, Project } from "@/lib/types";
 
 type Props = {
   open: boolean;
@@ -21,20 +23,31 @@ type Props = {
 
 const MENU_ITEMS: { label: string; icon: React.ReactNode; href?: string }[] = [
   { label: "Projects", icon: <GridIcon />, href: "/global" },
+  { label: "Workbench", icon: <ArtifactIcon />, href: "/workbench" },
   { label: "Artifacts", icon: <ArtifactIcon /> },
   { label: "Archive", icon: <ArchiveIcon /> },
   { label: "Contacts", icon: <PersonIcon /> },
   { label: "Settings", icon: <GearIcon /> },
 ];
 
+function mentionRoomHref(m: InboxMention): string {
+  const params = new URLSearchParams({ tab: "thread" });
+  if (m.topic_node_id) params.set("topicId", m.topic_node_id);
+  if (m.thread_session_id) params.set("threadSessionId", m.thread_session_id);
+  return `/projects/${m.project_id}/room?${params.toString()}`;
+}
+
 export function AppMenu({ open, onClose, onNavigate }: Props) {
   const clear = useAuthStore((s) => s.clear);
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const { items: mentions, unreadCount, markRead, refresh } = useMentionsInbox(open);
 
   useEffect(() => {
     if (!open) return;
     void apiFetch<Project[]>("/api/projects").then(setProjects).catch(() => {});
-  }, [open]);
+    void refresh().catch(() => undefined);
+  }, [open, refresh]);
 
   if (!open) return null;
 
@@ -54,7 +67,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
                   onClose();
                   onNavigate?.();
                 }}
-                className="flex cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-[10px] tracking-[1.5px] text-[var(--laed-ink)] uppercase hover:bg-[var(--laed-paper)]"
+                className="laed-nav laed-nav--active flex cursor-pointer items-center gap-2.5 px-3.5 py-2.5 hover:bg-[var(--laed-paper)]"
                 style={{
                   borderBottom:
                     i < MENU_ITEMS.length - 1
@@ -69,7 +82,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
               </Link>
             ) : (
               <div
-                className="flex items-center gap-2.5 px-3.5 py-2.5 text-[10px] tracking-[1.5px] text-[var(--laed-muted)] uppercase"
+                className="laed-nav laed-nav--inactive flex items-center gap-2.5 px-3.5 py-2.5"
                 style={{
                   borderBottom:
                     i < MENU_ITEMS.length - 1
@@ -85,6 +98,48 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
             )}
           </div>
         ))}
+        <div className="border-t border-[var(--laed-paper)] px-3.5 py-2">
+          <p className="laed-label mb-1 flex items-center justify-between">
+            <span>Mentions</span>
+            {unreadCount > 0 ? (
+              <span className="rounded-full bg-[var(--laed-navy)] px-1.5 py-0.5 text-[8px] text-white normal-case tracking-normal">
+                {unreadCount}
+              </span>
+            ) : null}
+          </p>
+          {mentions.length === 0 ? (
+            <p className="text-[9px] text-[var(--laed-muted)]">No mentions yet</p>
+          ) : (
+            <ul className="max-h-32 overflow-y-auto">
+              {mentions.slice(0, 8).map((m) => (
+                <li key={m.id}>
+                  <button
+                    type="button"
+                    className="w-full py-1 text-left text-[10px] hover:text-[var(--laed-navy)]"
+                    onClick={() => {
+                      void markRead(m.id).then(() => {
+                        onClose();
+                        onNavigate?.();
+                        router.push(mentionRoomHref(m));
+                      });
+                    }}
+                  >
+                    <span
+                      className={
+                        m.read_at === null ? "font-medium text-[var(--laed-ink)]" : ""
+                      }
+                    >
+                      {m.sender_label} · {m.project_name}
+                    </span>
+                    <span className="block line-clamp-1 text-[9px] text-[var(--laed-muted)]">
+                      {m.excerpt}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {projects.length > 0 ? (
           <div className="border-t border-[var(--laed-paper)] px-3.5 py-2">
             <p className="laed-label mb-1">Your projects</p>

@@ -21,6 +21,26 @@ async def _set_tenant(session: AsyncSession, tenant_id: str) -> None:
     )
 
 
+async def ensure_rag_tenant(
+    session: AsyncSession,
+    *,
+    tenant_id: str,
+    name: str = "laed",
+) -> None:
+    """Insert `rag.tenants` if missing (required before rag.projects FK)."""
+    await session.execute(
+        text(
+            """
+            INSERT INTO rag.tenants (id, name)
+            VALUES (CAST(:id AS uuid), :name)
+            ON CONFLICT (id) DO NOTHING
+            """
+        ),
+        {"id": tenant_id, "name": name},
+    )
+    await session.commit()
+
+
 async def ensure_rag_project(
     session: AsyncSession,
     *,
@@ -31,6 +51,7 @@ async def ensure_rag_project(
     embedding_dim: int = EMBEDDING_DIM_NOMIC,
 ) -> None:
     """Insert `rag.projects` with id = app project UUID (D16)."""
+    await ensure_rag_tenant(session, tenant_id=tenant_id)
     await _set_tenant(session, tenant_id)
     await session.execute(
         text(
@@ -71,6 +92,7 @@ async def ensure_rag_document(
     metadata: Mapping[str, object] | None = None,
 ) -> None:
     """Insert/update `rag.documents` with id = files.id (D17)."""
+    await ensure_rag_tenant(session, tenant_id=tenant_id)
     await _set_tenant(session, tenant_id)
     meta_json = json.dumps(dict(metadata or {}))
     await session.execute(
