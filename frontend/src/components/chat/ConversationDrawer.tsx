@@ -18,7 +18,13 @@ type Props = {
   onSelect: (id: string) => void;
   onNewChat: () => void;
   onDelete?: (id: string) => void;
+  onRename?: (id: string, title: string) => void;
   loading?: boolean;
+  newButtonLabel?: string;
+  accent?: "default" | "private";
+  /** Borderless layout for popups; separation via spacing only */
+  soft?: boolean;
+  deleteConfirmMessage?: string;
 };
 
 function formatRelative(iso: string): string {
@@ -46,8 +52,14 @@ export function ConversationDrawer({
   onSelect,
   onNewChat,
   onDelete,
+  onRename,
   loading = false,
+  newButtonLabel = "New chat",
+  accent = "default",
+  soft = false,
+  deleteConfirmMessage = "Remove this item from history?",
 }: Props) {
+  const isPrivateAccent = accent === "private";
   const isNarrow = useIsNarrowViewport();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -59,27 +71,43 @@ export function ConversationDrawer({
 
   function confirmDelete(id: string, title: string) {
     if (!onDelete) return;
-    if (window.confirm(`Remove "${title}" from history?`)) {
+    if (window.confirm(`${deleteConfirmMessage}\n\n"${title}"`)) {
       void onDelete(id);
     }
   }
+
+  const panelBg = "var(--laed-paper)";
+  const asideBorder = soft ? "" : "border-r border-[var(--laed-border)]";
+  const headerBorder = soft ? "" : "border-b border-[var(--laed-border)]";
 
   const panel = (
     <aside
       className={
         isNarrow
-          ? "fixed inset-y-0 left-0 z-[180] flex w-[min(280px,88vw)] flex-col border-r border-[var(--laed-border)] bg-[var(--laed-paper-elevated)] shadow-[var(--laed-shadow-pop)]"
-          : "flex h-full w-[200px] shrink-0 flex-col border-r border-[var(--laed-border)] bg-[var(--laed-paper-elevated)]"
+          ? `fixed inset-y-0 left-0 z-[180] flex w-[min(280px,88vw)] flex-col shadow-[var(--laed-shadow-pop)] rounded-r-[var(--laed-radius-md)] ${asideBorder}`
+          : `flex h-full w-[min(200px,30vw)] shrink-0 flex-col ${asideBorder}`
       }
+      style={{
+        background: panelBg,
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        borderRadius: soft && !isNarrow ? 0 : undefined,
+      }}
     >
-      <div className="flex shrink-0 items-center justify-between gap-1 border-b border-[var(--laed-border)] px-2 py-2">
+      <div
+        className={`flex shrink-0 items-center justify-between gap-2 px-3 py-3 ${headerBorder}`}
+      >
         <button
           type="button"
           onClick={() => void onNewChat()}
-          className="laed-label cursor-pointer border border-[var(--laed-border)] bg-white px-2 py-1 text-[var(--laed-navy)]"
+          className={
+            isPrivateAccent
+              ? "laed-btn-private cursor-pointer px-2 py-1"
+              : "laed-label cursor-pointer border border-[var(--laed-border)] bg-[var(--laed-paper-elevated)] px-2.5 py-1.5 text-[var(--laed-navy)]"
+          }
           style={{ borderRadius: "var(--laed-radius-sm)" }}
         >
-          New chat
+          {newButtonLabel}
         </button>
         {isNarrow ? (
           <button
@@ -100,7 +128,7 @@ export function ConversationDrawer({
           </button>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-1">
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-1">
         {loading ? (
           <p className="px-2 py-2 text-[9px] text-[var(--laed-muted)]">Loading…</p>
         ) : null}
@@ -110,6 +138,7 @@ export function ConversationDrawer({
             title={item.title}
             timeLabel={item.timeLabel}
             active={item.id === selectedId}
+            accent={accent}
             onClick={() => {
               onSelect(item.id);
               setMobileOpen(false);
@@ -118,6 +147,9 @@ export function ConversationDrawer({
               onDelete
                 ? () => confirmDelete(item.id, item.title)
                 : undefined
+            }
+            onRename={
+              onRename ? (title) => onRename(item.id, title) : undefined
             }
           />
         ))}

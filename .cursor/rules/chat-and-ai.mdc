@@ -1,0 +1,33 @@
+---
+description: Chat, assistant, thread AI, explicit context, realtime — conversational product principles.
+globs: backend/app/routes/chat.py,backend/app/routes/ai.py,backend/app/routes/workspace_ai.py,backend/app/services/ai_chat.py,backend/app/services/chat_context.py,backend/app/services/thread_ai.py,backend/app/services/chat_broadcast.py,frontend/src/components/AssistantPanel.tsx,frontend/src/components/ContextPicker.tsx,frontend/src/**/room/**,frontend/src/lib/hooks/useProjectChat.ts,frontend/src/lib/hooks/useAiStream.ts,docs/CHAT_AUDIT.md
+alwaysApply: false
+---
+
+# Chat and AI
+
+Canonical surface map: `docs/CHAT_AUDIT.md`. Read it before consolidating or adding chat UX.
+
+## Separation of concerns
+
+**Private assistant** (FAB / SSE / `ai_conversations`) and **shared thread** (WebSocket / `messages`) solve different problems—different persistence, different audience. Don’t merge transports without an explicit product decision.
+
+**One context pipeline** builds system prompts, history, RAG, and explicit attachments for every LLM entry point. New triggers (thread @-mentions, workspace harness) plug into that pipeline— they don’t fork copy-pasted RAG blocks.
+
+## Realtime and latency
+
+Interactive channels stay responsive: heavy generation runs off the hot path (async task, stream endpoint, broadcast when ready). Never block a WebSocket loop on model latency.
+
+AI messages in shared threads are first-class rows with the same broadcast semantics as human messages, visually distinct but equally durable.
+
+## Memory and context
+
+Thread memory is **collaborative** in shared channels—all participants’ messages in scope count, not only the requester’s private AI history.
+
+**Explicit context** (files, topics, projects, past threads) is user-selected attachment, parallel to RAG—not a replacement for scope. Wire the same attachment model across composers that claim to support it.
+
+Index conversations for retrieval via background work; indexing failures shouldn’t break send.
+
+## Evolution
+
+Deprecated pages and duplicate AI shells are not extension points—extend the supported surfaces or update the audit doc when retiring one.

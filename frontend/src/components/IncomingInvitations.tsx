@@ -43,7 +43,9 @@ export function IncomingInvitations({ onAccepted }: Props) {
 
   return (
     <div className="mx-4 mb-4 border border-[var(--laed-border)] bg-[var(--laed-paper-elevated)] p-3 md:mx-6">
-      <p className="laed-label mb-2 text-[var(--laed-navy)]">Invitations for you</p>
+      <p className="laed-label mb-2 text-[var(--laed-private-accent)]">
+        Invitations for you
+      </p>
       <ul className="space-y-2">
         {invites.map((inv) => (
           <li
@@ -56,7 +58,7 @@ export function IncomingInvitations({ onAccepted }: Props) {
             <span className="flex gap-2">
               <button
                 type="button"
-                className="laed-btn-primary py-1 px-2 text-[8px]"
+                className="laed-btn-private py-1 px-2 text-[8px]"
                 onClick={() => void accept(inv.id)}
               >
                 Accept

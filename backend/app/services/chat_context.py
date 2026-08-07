@@ -120,8 +120,8 @@ async def build_chat_context(
     if mode == "workspace" or project_id is None:
         system = await build_workspace_system(db, user_id=user_id)
         explicit_block = ""
+        dummy_scope = RetrievalScope(level="global", project_ids=[])
         if body.explicit_context:
-            dummy_scope = RetrievalScope(level="global", project_ids=[])
             _, explicit_block = await resolve_explicit_context(
                 db, user_id=user_id, base_scope=dummy_scope, items=body.explicit_context
             )
@@ -137,6 +137,7 @@ async def build_chat_context(
             llm_messages.append({"role": "user", "content": body.content})
         return _with_concise(system), llm_messages, []
 
+    # project mode (including workspace chats linked to a shared project)
     scope = await resolve_retrieval_scope(project_id, body, db, user_id=user_id)
     if body.retrieval_scope and body.retrieval_scope.include_constituent_topics:
         for tid in await _constituent_topic_ids(db, project_id):

@@ -17,6 +17,7 @@ class FileResponse(BaseModel):
     minio_key: str
     ingestion_status: str
     is_private: bool = False
+    shared_with_user_ids: list[UUID] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
@@ -25,6 +26,8 @@ class FileResponse(BaseModel):
 
 class FileUpdate(BaseModel):
     is_private: bool | None = None
+    """When shared (is_private=false): empty/omitted = everyone; non-empty = restricted."""
+    share_with_user_ids: list[UUID] | None = None
 
 
 class FileDetailResponse(FileResponse):

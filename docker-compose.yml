@@ -48,7 +48,6 @@ services:
       - MINIO_URL=minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - STT_URL=http://parakeet:5092
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
       - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS:-24}
@@ -130,19 +129,9 @@ services:
       - backend
     restart: always
 
-  # ── Speech-to-Text (Parakeet TDT 0.6B v3) ─────────────
-  parakeet:
-    image: rg.fr-par.scw.cloud/laed/parakeet:latest
-    volumes:
-      - parakeet_models:/app/models
-    networks:
-      backend: {}
-      llm-backbone:
-        aliases:
-          - parakeet
-    restart: always
-    ports:
-      - "127.0.0.1:5092:5092"
+  # ── Speech-to-Text ─────────────────────────────────────
+  # Parakeet STT now lives in the llm-gateway stack (single model front door).
+  # laed reaches it via the gateway as model `stt/parakeet` (see app.services.stt).
 
 volumes:
   caddy_data:
@@ -150,7 +139,6 @@ volumes:
   pgdata:
   redisdata:
   filedata:
-  parakeet_models:
 
 networks:
   frontend:

@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from uuid import UUID
 
-import httpx
 from fastapi import APIRouter, Depends, File as UploadFileParam, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_project_role
-from app.config import settings
 from app.models import User, ProjectMember, get_db
 from app.models.file import File as FileModel
 from app.services.file_service import new_file_id, upload_bytes
 from app.services.ingestion import ingest_file
+from app.services.stt import STTError, transcribe_audio_bytes
 
 router = APIRouter(prefix="/api/projects", tags=["transcribe"])
 
@@ -25,18 +24,15 @@ async def transcribe_audio(
     db: AsyncSession = Depends(get_db),
 ):
     raw = await audio.read()
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        resp = await client.post(
-            f"{settings.stt_url.rstrip('/')}/transcribe",
-            files={"audio": (audio.filename or "audio.wav", raw, audio.content_type or "audio/wav")},
+    try:
+        transcript = await transcribe_audio_bytes(
+            audio.filename or "audio.wav", raw, audio.content_type or "audio/wav"
         )
-    if resp.status_code >= 400:
+    except STTError:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="STT service failed",
         )
-    payload = resp.json()
-    transcript = payload.get("text") or payload.get("transcript") or ""
     if not transcript:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Empty transcript")
 

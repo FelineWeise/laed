@@ -1,0 +1,23 @@
+---
+description: LiteLLM gateway consumer contract — single client, canonical models, sibling parity.
+globs: backend/app/services/llm.py,SHARED_LITELLM.md,litellm-config.yaml,.env.example
+alwaysApply: false
+---
+
+# LLM gateway
+
+LAED is a **consumer**, not a host, of LiteLLM. Full contract: `SHARED_LITELLM.md`. Model catalog SSOT: sibling `llm-gateway` manifest → built config.
+
+## Principles
+
+**One client module** for chat, embeddings, and tool calls to the gateway—no stray HTTP clients with divergent auth or URLs.
+
+**Canonical model IDs** on the wire (`ollama/...` Schema X). Aliases and legacy names create silent production mismatches.
+
+**Secrets and URLs match the gateway** operator env (`LLM_GATEWAY_KEY` ↔ `LITELLM_MASTER_KEY`). Cross-repo naming stays parallel with OpenClaw when you touch integration.
+
+**Embeddings target the production vector table** for the chosen model’s dimension—don’t write high-dimensional vectors into tables without ANN support unless explicitly required.
+
+**Cold start order:** gateway stack healthy before LAED services that call models. Verify with the repo’s consumer smoke script when changing env or models—not merely “container is up.”
+
+Do not add LiteLLM to LAED’s compose file.

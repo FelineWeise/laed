@@ -61,6 +61,7 @@ from app.routes.grid_sections import router as grid_sections_router
 from app.routes.invitations import router as invitations_router
 from app.routes.mentions import router as mentions_router
 from app.routes.capture import router as capture_router
+from app.routes.stt import router as stt_router
 
 app.include_router(auth_router)
 app.include_router(projects_router)
@@ -81,6 +82,7 @@ app.include_router(grid_sections_router)
 app.include_router(invitations_router)
 app.include_router(mentions_router)
 app.include_router(capture_router)
+app.include_router(stt_router)
 
 
 @app.get("/api/health")

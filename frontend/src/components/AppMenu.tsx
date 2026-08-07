@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  ArchiveIcon,
   ArtifactIcon,
   GearIcon,
   GridIcon,
@@ -23,9 +22,9 @@ type Props = {
 
 const MENU_ITEMS: { label: string; icon: React.ReactNode; href?: string }[] = [
   { label: "Projects", icon: <GridIcon />, href: "/global" },
+  { label: "Agent", icon: <ArtifactIcon />, href: "/laed" },
+  { label: "Capture", icon: <ArtifactIcon />, href: "/capture" },
   { label: "Workbench", icon: <ArtifactIcon />, href: "/workbench" },
-  { label: "Artifacts", icon: <ArtifactIcon /> },
-  { label: "Archive", icon: <ArchiveIcon /> },
   { label: "Contacts", icon: <PersonIcon /> },
   { label: "Settings", icon: <GearIcon /> },
 ];
@@ -54,8 +53,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
   return (
     <div className="fixed inset-0 z-[400] bg-black/20" onClick={onClose}>
       <div
-        className="absolute top-[90px] right-[18px] w-40 border border-[var(--laed-border)] bg-white shadow-[var(--laed-shadow-pop)]"
-        style={{ borderRadius: "var(--laed-radius-sm)" }}
+        className="laed-popup-surface absolute top-[90px] right-[18px] w-44 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {MENU_ITEMS.map((item, i) => (
@@ -102,7 +100,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
           <p className="laed-label mb-1 flex items-center justify-between">
             <span>Mentions</span>
             {unreadCount > 0 ? (
-              <span className="rounded-full bg-[var(--laed-navy)] px-1.5 py-0.5 text-[8px] text-white normal-case tracking-normal">
+              <span className="rounded-full bg-[var(--laed-private-accent)] px-1.5 py-0.5 text-[8px] text-white normal-case tracking-normal">
                 {unreadCount}
               </span>
             ) : null}
@@ -115,7 +113,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
                 <li key={m.id}>
                   <button
                     type="button"
-                    className="w-full py-1 text-left text-[10px] hover:text-[var(--laed-navy)]"
+                    className="w-full py-1 text-left text-[10px] hover:text-[var(--laed-private-accent)]"
                     onClick={() => {
                       void markRead(m.id).then(() => {
                         onClose();
@@ -146,7 +144,7 @@ export function AppMenu({ open, onClose, onNavigate }: Props) {
             {projects.map((p) => (
               <Link
                 key={p.id}
-                href={`/projects/${p.id}/canvas`}
+                href={`/projects/${p.id}/room`}
                 onClick={() => {
                   onClose();
                   onNavigate?.();

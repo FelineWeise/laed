@@ -2,22 +2,26 @@
 
 import { MenuBars } from "@/components/icons";
 
-type Breadcrumb = {
-  label: string;
-  onClick?: () => void;
-};
-
 type Props = {
-  breadcrumb?: Breadcrumb;
-  breadcrumbColor?: string;
+  /** Uppercase section label after LAED |  */
+  section?: string;
+  /** Navigate home / projects list */
+  onHome?: () => void;
   menuOpen?: boolean;
   onMenu?: () => void;
   right?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** Private (light green) vs project (light blue) top bar */
+  chrome?: "private" | "project" | "neutral";
+  /** @deprecated Prefer `section` + `onHome` (mockup AppBar). */
+  breadcrumb?: { label: string; onClick?: () => void };
+  breadcrumbColor?: string;
 };
 
 export function AppShell({
+  section,
+  onHome,
   breadcrumb,
   breadcrumbColor,
   menuOpen = false,
@@ -25,13 +29,26 @@ export function AppShell({
   right,
   children,
   className = "",
+  chrome = "neutral",
 }: Props) {
+  const showLegacyCrumb = Boolean(breadcrumb) && !section;
+
+  const headerBg =
+    chrome === "private"
+      ? "var(--laed-chrome-private)"
+      : chrome === "project"
+        ? "var(--laed-chrome-project)"
+        : "#fff";
+
   return (
     <div
       className={`laed-shell relative mx-auto flex min-h-dvh flex-col bg-[var(--laed-paper)] ${className}`}
     >
-      <header className="relative z-[250] flex h-10 shrink-0 items-center justify-between px-[18px] pt-2">
-        {breadcrumb ? (
+      <header
+        className="relative z-[250] flex h-10 shrink-0 items-center justify-between px-[18px] pt-[max(0.25rem,env(safe-area-inset-top,0px))]"
+        style={{ background: headerBg }}
+      >
+        {showLegacyCrumb && breadcrumb ? (
           <button
             type="button"
             onClick={breadcrumb.onClick}
@@ -41,7 +58,24 @@ export function AppShell({
             {breadcrumb.label}
           </button>
         ) : (
-          <span className="laed-label">LAED</span>
+          <div className="flex items-center gap-2 text-[13px]">
+            <button
+              type="button"
+              onClick={onHome}
+              className="cursor-pointer border-none bg-transparent p-0 font-bold tracking-[1.5px] text-[var(--laed-ink)]"
+              disabled={!onHome}
+            >
+              LAED
+            </button>
+            {section ? (
+              <>
+                <span className="text-[var(--laed-ink)]">|</span>
+                <span className="font-medium tracking-[1.5px] text-[var(--laed-ink)] uppercase">
+                  {section}
+                </span>
+              </>
+            ) : null}
+          </div>
         )}
         {right !== undefined ? (
           right

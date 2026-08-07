@@ -41,7 +41,13 @@ class CaptureAsset(BaseMixin, Base):
         ForeignKey("capture_sessions.id", ondelete="CASCADE"),
         nullable=False,
     )
-    file_id: Mapped[uuid.UUID] = mapped_column(
+    file_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("files.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
+    minio_key: Mapped[str | None] = mapped_column(String, nullable=True)
+    derived_minio_key: Mapped[str | None] = mapped_column(String, nullable=True)
+    filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    content_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    source_mime: Mapped[str | None] = mapped_column(String, nullable=True)
+    asset_kind: Mapped[str] = mapped_column(String, server_default="image", nullable=False)

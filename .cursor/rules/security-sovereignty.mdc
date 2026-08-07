@@ -1,0 +1,38 @@
+---
+description: LAED security & data-sovereignty USP — EU non-hyperscaler closed loop; surface it in UI copy, tooltips, and visual trust cues.
+globs: frontend/**,backend/app/routes/**,backend/app/services/**,docs/**
+alwaysApply: false
+---
+
+# Security & sovereignty (product USP)
+
+LAED’s differentiator is **trust by architecture** and **compliance-by-design**: European infrastructure, non-hyperscaler hosting, and tenant data that stays inside the LAED ecosystem—not routed through US big-cloud AI or ad-tech pipelines.
+
+## Product principle
+
+**Closed loop.** User content, embeddings, chat, and files are processed and stored within LAED and its defined tenants (Scaleway EU stack, self-hosted gateway, operator-controlled RAG). Features must not silently export data to third parties unless the user explicitly opts in and the UI says so plainly.
+
+**Sovereignty is visible.** Security is not only backend policy—it is communicated in the product. Users should *see* why LAED is different, not infer it from a privacy policy link alone.
+
+## UI & copy (frontend)
+
+When adding or changing surfaces that touch **data, AI, files, sharing, search, or external tools**:
+
+- **Name the boundary** in plain language: where data lives, who can access it, what stays in-region.
+- **Prefer inline trust cues** over walls of legal text: short tooltips, helper lines under inputs, info icons with 1–2 sentence explanations, subtle labels/chips (“EU-hosted”, “Your project only”, “Not sent to third-party AI” when true).
+- **Underline honestly.** Visual emphasis (accent underline, sovereign green, lock/info affordances) marks *real* architectural properties—never decorative “security theater.” If a feature *does* call an external API (e.g. optional web search), say so explicitly at the point of use.
+- **Reinforce on high-risk actions:** upload, invite collaborator, link project, enable search/tools, export/share—always pair the control with a sovereignty-relevant hint where accuracy allows.
+
+Reuse LAED tokens (`--laed-green`, navy, paper) for trust elements; keep tone factual and calm, not alarmist.
+
+## Engineering guardrails
+
+- Default models and embeddings go through the **operator’s LiteLLM gateway**—not embedded third-party SDKs that phone home with user content.
+- No analytics, error reporters, or fonts/CDNs that exfiltrate **content or PII** without an explicit product decision and UI disclosure.
+- Sharing and retrieval features respect tenant/project scope; UI copy should reflect *who* gains access, not only *what* is shared.
+
+## Accuracy rule
+
+Only claim what the deployment actually provides. Wording may reference: European hosting (Scaleway PAR), self-hosted stack, tenant-scoped RAG, project/topic access controls. Do not promise certifications or legal outcomes (GDPR “compliance”) in UI—describe **technical facts**.
+
+When unsure whether a feature breaks the closed loop, stop and ask before shipping UI that claims sovereignty.

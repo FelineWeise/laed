@@ -97,7 +97,7 @@ export default function WorkbenchPage() {
   return (
     <AuthGuard>
       <AppShell menuOpen={menuOpen} onMenu={() => setMenuOpen((o) => !o)}>
-        <div className={`laed-shell mx-auto flex flex-col gap-4 px-4 pb-28 pt-2 ${menuOpen ? "opacity-35" : ""}`}>
+        <div className={`laed-shell mx-auto flex flex-col gap-4 px-4 pt-2 pb-[var(--laed-bottom-bar-offset)] ${menuOpen ? "opacity-35" : ""}`}>
           <p className="laed-label">Workbench</p>
           <div className="flex flex-wrap gap-2">
             <button

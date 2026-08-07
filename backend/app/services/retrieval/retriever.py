@@ -99,10 +99,27 @@ class RagRetriever:
         visibility_sql = ""
         if viewer_user_id:
             scope_params["viewer_user_id"] = viewer_user_id
-            visibility_sql = (
-                " AND (visibility_scope IS NULL OR visibility_scope <> 'private' "
-                "OR uploaded_by = CAST(:viewer_user_id AS uuid))"
-            )
+            # private: owner only
+            # project / NULL: any project member (already scoped by project filter)
+            # restricted: owner OR viewer listed in metadata.allowed_user_ids
+            visibility_sql = """
+                AND (
+                  visibility_scope IS NULL
+                  OR visibility_scope = 'project'
+                  OR (
+                    visibility_scope = 'private'
+                    AND uploaded_by = CAST(:viewer_user_id AS uuid)
+                  )
+                  OR (
+                    visibility_scope = 'restricted'
+                    AND (
+                      uploaded_by = CAST(:viewer_user_id AS uuid)
+                      OR COALESCE(metadata->'allowed_user_ids', '[]'::jsonb)
+                          ? :viewer_user_id
+                    )
+                  )
+                )
+            """
 
         params: dict[str, object] = {
             "query_embedding": emb_literal,
@@ -144,12 +161,13 @@ class RagRetriever:
         uploaded_by: str | None = None,
         visibility_scope: str = "project",
         folder_path: str | None = None,
+        session_factory: async_sessionmaker[AsyncSession] | None = None,
     ) -> None:
         if not chunks:
             return
         contents = [c["content"] for c in chunks]
         embeddings = await gateway.embed_many(contents, model=self.embedding_model)
-        factory = rag_session_factory()
+        factory = session_factory or rag_session_factory()
         async with factory() as session:
             await ensure_rag_document(
                 session,

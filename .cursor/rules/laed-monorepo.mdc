@@ -1,0 +1,41 @@
+---
+description: LAED core — how to think and work in this repo. Always on.
+alwaysApply: true
+---
+
+# LAED
+
+Secure collaboration platform (laed.eu). **USP:** EU non-hyperscaler hosting, data stays in the LAED tenant closed loop—see `security-sovereignty.mdc` for product and UI principles. **Facts** (stack map, deploy paths, env names): `AGENTS.md`, `SHARED_LITELLM.md`, `../docs/rag-vector-architecture.md`, `../scaleway-push-template.md`.
+
+## Mindset
+
+**Discover before you invent.** Inspect existing routes, models, access helpers, and migrations before adding tables or APIs. Extend what works; don't build a second path for the same capability.
+
+**One home for each behavior.** HTTP validates and delegates; services own logic; shared flows get one module others import. Duplication is a design smell—consolidate upward.
+
+**Explicit over implicit.** Scope, identity, and configuration are typed and passed in (request body, query, value objects, `Settings`)—not inferred from ambient session, guessed from UI state alone, or read via ad-hoc `os.getenv`.
+
+**Complete beats compilable.** A feature is done when every surface that should use it does (UI entry points, realtime channels, worker jobs, operator steps). Backend-only is a milestone, not shipment.
+
+**Preserve what users rely on.** Refactors re-establish existing flows; they don't narrow behavior unless the task says so. When in doubt, read `docs/CHAT_AUDIT.md` and critical paths before restructuring.
+
+## Architecture (mental model)
+
+Monorepo: **backend** (FastAPI + worker), **frontend** (Next.js PWA), **infra** (Terraform), **scripts** (release/verify). Postgres holds app data and RAG vectors; MinIO holds blobs; Celery handles async work; LiteLLM lives in a **sibling** gateway—not in LAED compose.
+
+Sibling services on `llm-backbone`: **llm-gateway** (models/embeddings SSOT), **openclaw** (agent runtime). Keep cross-repo env contracts aligned when touching gateway wiring.
+
+## Product shape
+
+**Canvas-first IA:** global topology → project topology → Room (collaboration surfaces). Navigation deepens the graph before jumping to chat. Room is for thread, files, and insights—not retired product ideas.
+
+**Scope follows the user’s place in the hierarchy** (workspace → project → topic). APIs and retrieval honor that placement; the client passes context forward consistently.
+
+**Usable everywhere.** LAED is a mobile PWA first: readable, touch-friendly, and reflows across viewports (`mobile-pwa-ux.mdc`).
+
+## Quality bar
+
+- TypeScript: strict types; no `any` / `unknown`.
+- Python: typed public APIs; async database I/O.
+- Vectors: pgvector + tenant RLS patterns—confirm in repo before proposing alternate stores.
+- Migrations: Alembic chain must stay linear; verify heads before shipping schema work.

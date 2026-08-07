@@ -45,3 +45,15 @@ export const meBubblePalette: BubblePalette = {
   color: "var(--laed-bubble-me-fg)",
   border: "none",
 };
+
+export const privateMeBubblePalette: BubblePalette = {
+  background: "var(--laed-private-accent)",
+  color: "#ffffff",
+  border: "none",
+};
+
+export const privateAiBubblePalette: BubblePalette = {
+  background: "var(--laed-bubble-private-ai-bg)",
+  color: "var(--laed-ink)",
+  border: "1px solid var(--laed-private-border)",
+};

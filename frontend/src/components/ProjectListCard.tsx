@@ -152,7 +152,7 @@ export function ProjectListCard({
               <button
                 type="button"
                 onClick={() => void sendInvite()}
-                className="laed-btn-primary shrink-0 py-1.5 text-[8px]"
+                className="laed-btn-private shrink-0 py-1.5 text-[8px]"
               >
                 Invite
               </button>

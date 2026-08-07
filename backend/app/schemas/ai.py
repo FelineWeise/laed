@@ -13,12 +13,14 @@ from app.schemas.retrieval import RetrievalScopePayload
 class ConversationCreate(BaseModel):
     is_private: bool = True
     topic_node_id: UUID | None = None
+    linked_thread_session_id: UUID | None = None
 
 
 class ConversationUpdate(BaseModel):
     title: str | None = None
     topic_node_id: UUID | None = None
     is_private: bool | None = None
+    project_id: UUID | None = None
 
 
 class ConversationResponse(BaseModel):
@@ -28,6 +30,7 @@ class ConversationResponse(BaseModel):
     is_private: bool
     title: str | None = None
     topic_node_id: UUID | None = None
+    linked_thread_session_id: UUID | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -39,6 +42,7 @@ class MessageCreate(BaseModel):
     retrieval_scope: RetrievalScopePayload | None = None
     explicit_context: list[ExplicitContextItem] = Field(default_factory=list)
     model: str | None = None
+    embedding_model: str | None = None
 
 
 class MessageResponse(BaseModel):

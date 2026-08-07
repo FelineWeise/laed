@@ -1,27 +1,12 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-function RecordRedirect() {
+export default function RecordRedirectPage() {
   const router = useRouter();
-  const search = useSearchParams();
-  const projectId = search.get("projectId");
-
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (projectId) params.set("projectId", projectId);
-    const qs = params.toString();
-    router.replace(`/spoken${qs ? `?${qs}` : ""}`);
-  }, [router, projectId]);
-
-  return null;
-}
-
-export default function RecordPage() {
-  return (
-    <Suspense>
-      <RecordRedirect />
-    </Suspense>
-  );
+    router.replace("/capture");
+  }, [router]);
+  return <div className="p-8 text-center laed-label">Opening Capture…</div>;
 }

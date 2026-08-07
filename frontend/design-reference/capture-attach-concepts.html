@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LAED — Capture attach concepts (3)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1917;
+      --muted: #8a8780;
+      --paper: #f2f0ec;
+      --white: #fff;
+      --border: rgba(26, 25, 23, 0.1);
+      --green: #1b4332;
+      --green-soft: rgba(27, 67, 50, 0.09);
+      --green-mid: rgba(27, 67, 50, 0.18);
+      --green-chrome: rgba(27, 67, 50, 0.11);
+      --warn: #b0483a;
+      --bar-h: 88px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --display: "Instrument Serif", Georgia, serif;
+      --phone-w: 390px;
+      --phone-h: 800px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: var(--font);
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(27, 67, 50, 0.14), transparent),
+        #d4d0c8;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 28px 16px 56px;
+    }
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+    .lead {
+      margin: 0;
+      max-width: 620px;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+    .lead strong { color: var(--ink); font-weight: 600; }
+    .path {
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+    .picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 720px;
+    }
+    .picker button {
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(8px);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.2s var(--ease), color 0.2s, box-shadow 0.2s;
+    }
+    .picker button:hover { background: rgba(255, 255, 255, 0.9); }
+    .picker button.active {
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(26, 25, 23, 0.18);
+    }
+    .picker button em {
+      display: block;
+      font-style: normal;
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 2px;
+    }
+    .picker button.active em { opacity: 0.7; color: #fff; }
+
+    .stage-wrap { position: relative; }
+    .caption {
+      width: var(--phone-w);
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .phone {
+      width: var(--phone-w);
+      height: var(--phone-h);
+      background: var(--paper);
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      display: none;
+      flex-direction: column;
+      box-shadow:
+        0 0 0 1px rgba(26, 25, 23, 0.08),
+        0 24px 64px rgba(26, 25, 23, 0.16);
+    }
+    .phone.active { display: flex; }
+
+    .appbar {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: var(--green-chrome);
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+    .brand { font-weight: 700; letter-spacing: 0.12em; font-size: 12px; }
+    .sec {
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .fill {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: var(--bar-h);
+      position: relative;
+    }
+
+    .viewfinder {
+      flex: 1;
+      min-height: 0;
+      margin: 12px;
+      border-radius: 22px;
+      background: #12100c;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .viewfinder::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(45, 106, 79, 0.25), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(26, 25, 23, 0.5), transparent 50%);
+      pointer-events: none;
+    }
+    .vf-hint {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 0 28px;
+      max-width: 240px;
+    }
+    .live {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 2;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 12.5px;
+      line-height: 1.5;
+      max-height: 36%;
+      overflow: auto;
+    }
+    .live .lab {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 6px;
+    }
+
+    .shutter-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 16px 0 12px;
+      background: var(--white);
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: var(--green-soft);
+      color: var(--green);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .icon-btn.main {
+      width: 68px;
+      height: 68px;
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 10px 28px rgba(27, 67, 50, 0.28);
+    }
+    .icon-btn.rec {
+      background: var(--warn);
+      color: #fff;
+    }
+
+    .bottombar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--bar-h);
+      background: rgba(27, 67, 50, 0.08);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(27, 67, 50, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      padding-bottom: 12px;
+      z-index: 30;
+    }
+    .navfab {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(27, 67, 50, 0.12);
+      color: var(--green);
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .navfab.on {
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 6px 20px rgba(27, 67, 50, 0.3);
+    }
+
+    .chip {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+      border: 1px solid rgba(26, 25, 23, 0.06);
+    }
+    .chip .tag {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      font-size: 8px;
+      text-align: center;
+      padding: 3px 0;
+      border-radius: 6px;
+      background: rgba(26, 25, 23, 0.7);
+      color: #fff;
+      letter-spacing: 0.04em;
+    }
+    .chip .mark {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #fff;
+      font-size: 9px;
+      display: grid;
+      place-items: center;
+    }
+    .photo-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #4a4640, #9a948a 55%, #6b665e);
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--bar-h) + 12px);
+      transform: translateX(-50%);
+      background: var(--ink);
+      color: #fff;
+      font-size: 11px;
+      padding: 9px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+      z-index: 40;
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+    .toast.on { opacity: 1; }
+
+    /* ─── Concept A: Filmstrip + right magnet rail ─── */
+    .a-row {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+    }
+    .a-center {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .a-rail {
+      width: 108px;
+      flex-shrink: 0;
+      padding: 10px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: linear-gradient(90deg, transparent, rgba(27, 67, 50, 0.04));
+      border-left: 1px solid rgba(26, 25, 23, 0.05);
+    }
+    .a-rail-label {
+      font-size: 8px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 4px 4px;
+    }
+    .a-proj {
+      flex: 1;
+      min-height: 0;
+      border-radius: 16px;
+      padding: 10px 8px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(26, 25, 23, 0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      transition: transform 0.2s var(--ease), background 0.2s, box-shadow 0.2s;
+    }
+    .a-proj:hover,
+    .a-proj.hot {
+      background: var(--green-soft);
+      border-color: rgba(27, 67, 50, 0.25);
+      box-shadow: 0 8px 20px rgba(27, 67, 50, 0.1);
+      transform: translateX(-2px);
+    }
+    .a-proj .n {
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .a-proj .m { font-size: 8px; color: var(--muted); }
+    .a-film {
+      padding: 0 14px 10px;
+      background: var(--white);
+    }
+    .a-film-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .a-film-head .t {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .a-film-head .h {
+      font-size: 10px;
+      color: var(--green);
+      font-weight: 500;
+    }
+    .a-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    /* ─── Concept B: Unified dock (session | projects) ─── */
+    .b-dock {
+      background: var(--white);
+      border-top: 1px solid rgba(26, 25, 23, 0.06);
+      padding: 12px 14px 10px;
+      flex-shrink: 0;
+    }
+    .b-dock-inner {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 0;
+      align-items: stretch;
+      min-height: 92px;
+    }
+    .b-pane { min-width: 0; padding: 0 10px; }
+    .b-pane:first-child { padding-left: 0; }
+    .b-pane:last-child { padding-right: 0; }
+    .b-divider {
+      width: 1px;
+      background: linear-gradient(
+        180deg,
+        transparent,
+        rgba(26, 25, 23, 0.12) 20%,
+        rgba(26, 25, 23, 0.12) 80%,
+        transparent
+      );
+      margin: 4px 0;
+    }
+    .b-label {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .b-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      align-items: center;
+      min-height: 64px;
+    }
+    .b-proj {
+      flex-shrink: 0;
+      height: 64px;
+      min-width: 72px;
+      max-width: 88px;
+      padding: 8px;
+      border-radius: 14px;
+      background: var(--green-soft);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      border: 1px solid transparent;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s var(--ease);
+    }
+    .b-proj.hot {
+      border-color: rgba(27, 67, 50, 0.35);
+      background: var(--green-mid);
+      transform: scale(1.04);
+    }
+    .b-proj .n {
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .b-bridge {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--bar-h) + 118px);
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .phone-b.dragging .b-bridge { opacity: 1; }
+
+    /* ─── Concept C: Sheet that blooms from tray ─── */
+    .c-tray {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: calc(var(--bar-h) + 8px);
+      z-index: 25;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 12px 40px rgba(26, 25, 23, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      transition: height 0.45s var(--ease);
+      height: 96px;
+    }
+    .phone-c.sheet-open .c-tray { height: 280px; }
+    .c-grab {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(26, 25, 23, 0.15);
+      margin: 8px auto 6px;
+    }
+    .c-session {
+      padding: 0 14px 10px;
+    }
+    .c-session-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .c-session-head .t {
+      font-family: var(--display);
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+    .c-session-head button {
+      border: none;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .c-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .c-projects {
+      padding: 4px 14px 14px;
+      border-top: 1px solid rgba(26, 25, 23, 0.06);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.35s var(--ease) 0.05s, transform 0.35s var(--ease);
+      pointer-events: none;
+    }
+    .phone-c.sheet-open .c-projects {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .c-projects .sub {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .c-plist {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .c-prow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(242, 240, 236, 0.8);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .c-prow.hot,
+    .c-prow:hover {
+      background: var(--green-soft);
+      border-color: rgba(27, 67, 50, 0.2);
+    }
+    .c-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .c-prow .n { font-size: 12px; font-weight: 600; }
+    .c-prow .m { font-size: 10px; color: var(--muted); }
+    .c-fill {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      /* leave room for floating tray */
+      padding-bottom: 108px;
+    }
+    .phone-c.sheet-open .c-fill { padding-bottom: 292px; }
+    .c-fill .viewfinder { margin-bottom: 0; }
+    .c-fill .shutter-row { background: transparent; }
+
+    .notes {
+      max-width: 680px;
+      display: grid;
+      gap: 10px;
+    }
+    .note {
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.5;
+      border: 1px solid rgba(26, 25, 23, 0.06);
+    }
+    .note strong {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <h1>Capture × projects</h1>
+  <p class="lead">
+    Three attach concepts. Same rules: <strong>Live transcription</strong> (no vendor names),
+    mic + camera only, attach stays <strong>private</strong>. Pick the one that feels most natural.
+  </p>
+  <p class="path">design-reference/capture-attach-concepts.html</p>
+
+  <div class="picker" id="picker">
+    <button type="button" class="active" data-c="a">
+      <em>Concept A</em>
+      Filmstrip → right rail
+    </button>
+    <button type="button" data-c="b">
+      <em>Concept B</em>
+      One dock, two halves
+    </button>
+    <button type="button" data-c="c">
+      <em>Concept C</em>
+      Session sheet expands
+    </button>
+  </div>
+
+  <div class="stage-wrap">
+    <p class="caption" id="caption">A — Captures as a filmstrip; projects magnetize on the right. Drag a card across.</p>
+
+    <!-- A -->
+    <div class="phone active" id="phone-a" data-id="a">
+      <header class="appbar">
+        <div><span class="brand">LAED</span> <span style="opacity:0.35">|</span> <span class="sec">Capture</span></div>
+      </header>
+      <div class="fill">
+        <div class="a-row">
+          <div class="a-center">
+            <div class="viewfinder">
+              <p class="vf-hint">Listening…</p>
+              <div class="live">
+                <div class="lab">Live transcription</div>
+                Today we aligned on the pilot scope and next week’s delivery.
+              </div>
+            </div>
+            <div class="shutter-row">
+              <button type="button" class="icon-btn rec" aria-label="Stop">
+                <span style="width:14px;height:14px;background:#fff;border-radius:3px;display:block"></span>
+              </button>
+              <button type="button" class="icon-btn main" aria-label="Camera">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              </button>
+            </div>
+            <div class="a-film">
+              <div class="a-film-head">
+                <span class="t">This session</span>
+                <span class="h">Drag onto a project →</span>
+              </div>
+              <div class="a-strip">
+                <div class="chip"><div class="photo-fill"></div><span class="tag">Photo</span></div>
+                <div class="chip" style="display:grid;place-items:center;font-size:20px;color:var(--green)">♪<span class="tag">Audio</span></div>
+                <div class="chip" style="padding:8px;font-size:9px;line-height:1.25;color:var(--ink)">pilot scope…<span class="tag">.txt</span></div>
+              </div>
+            </div>
+          </div>
+          <aside class="a-rail" aria-label="Projects">
+            <div class="a-rail-label">Projects</div>
+            <div class="a-proj hot"><span class="n">A2A-as-a-Service</span><span class="m">Drop</span></div>
+            <div class="a-proj"><span class="n">Product ideas</span><span class="m">Private</span></div>
+            <div class="a-proj"><span class="n">LAED feature</span><span class="m">3 partners</span></div>
+          </aside>
+        </div>
+      </div>
+      <div class="toast on">Added privately to A2A-as-a-Service</div>
+      <nav class="bottombar"><div class="navfab">Agent</div><div class="navfab on">Cap</div></nav>
+    </div>
+
+    <!-- B -->
+    <div class="phone phone-b" id="phone-b" data-id="b">
+      <header class="appbar">
+        <div><span class="brand">LAED</span> <span style="opacity:0.35">|</span> <span class="sec">Capture</span></div>
+      </header>
+      <div class="fill">
+        <div class="viewfinder">
+          <p class="vf-hint">Ready — mic or camera</p>
+          <div class="b-bridge">slide across to attach →</div>
+        </div>
+        <div class="shutter-row">
+          <button type="button" class="icon-btn" aria-label="Mic">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <button type="button" class="icon-btn main" aria-label="Camera">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+          </button>
+        </div>
+        <div class="b-dock">
+          <div class="b-dock-inner">
+            <div class="b-pane">
+              <div class="b-label">Session</div>
+              <div class="b-row">
+                <div class="chip"><div class="photo-fill"></div><span class="tag">Photo</span><span class="mark">✓</span></div>
+                <div class="chip" style="display:grid;place-items:center;font-size:18px;color:var(--green)">♪<span class="tag">Audio</span></div>
+              </div>
+            </div>
+            <div class="b-divider"></div>
+            <div class="b-pane">
+              <div class="b-label">Projects</div>
+              <div class="b-row">
+                <div class="b-proj hot"><span class="n">A2A-as-a-Service</span></div>
+                <div class="b-proj"><span class="n">Product ideas</span></div>
+                <div class="b-proj"><span class="n">LAED feature</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="bottombar"><div class="navfab">Agent</div><div class="navfab on">Cap</div></nav>
+    </div>
+
+    <!-- C -->
+    <div class="phone phone-c sheet-open" id="phone-c" data-id="c">
+      <header class="appbar">
+        <div><span class="brand">LAED</span> <span style="opacity:0.35">|</span> <span class="sec">Capture</span></div>
+      </header>
+      <div class="fill c-fill">
+        <div class="viewfinder">
+          <p class="vf-hint">Session sheet open — pick a project for the selected capture</p>
+        </div>
+        <div class="shutter-row">
+          <button type="button" class="icon-btn" aria-label="Mic">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <button type="button" class="icon-btn main" aria-label="Camera">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="c-tray" id="cTray">
+        <div class="c-grab"></div>
+        <div class="c-session">
+          <div class="c-session-head">
+            <span class="t">This session</span>
+            <button type="button" id="cToggle">Add to project</button>
+          </div>
+          <div class="c-strip">
+            <div class="chip" style="outline:2px solid var(--green);outline-offset:1px"><div class="photo-fill"></div><span class="tag">Photo</span></div>
+            <div class="chip" style="display:grid;place-items:center;font-size:18px;color:var(--green)">♪<span class="tag">Audio</span></div>
+            <div class="chip" style="padding:8px;font-size:9px;line-height:1.25">pilot…<span class="tag">.txt</span></div>
+          </div>
+        </div>
+        <div class="c-projects">
+          <div class="sub">Attach privately</div>
+          <div class="c-plist">
+            <div class="c-prow hot"><div class="c-avatar">A2</div><div><div class="n">A2A-as-a-Service</div><div class="m">2 partners</div></div></div>
+            <div class="c-prow"><div class="c-avatar" style="background:#584f4a">Pi</div><div><div class="n">Product ideas</div><div class="m">Only you</div></div></div>
+            <div class="c-prow"><div class="c-avatar" style="background:#3a3733">Lf</div><div><div class="n">LAED feature</div><div class="m">3 partners</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="toast">Added privately to A2A-as-a-Service</div>
+      <nav class="bottombar"><div class="navfab">Agent</div><div class="navfab on">Cap</div></nav>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <strong>A — Filmstrip → right rail</strong>
+      Projects live on the right as soft drop magnets. Session stays a horizontal film under the shutter. Best when you already know which project you’ll file into.
+    </div>
+    <div class="note">
+      <strong>B — Unified dock</strong>
+      One continuous bar: session on the left, projects on the right, hairline in the middle. Drag sideways within the dock — no side panel chrome. Most seamless on phone width.
+    </div>
+    <div class="note">
+      <strong>C — Expanding session sheet</strong>
+      Tray floats over the viewfinder. “Add to project” expands it into a project list (tap-first, great for touch). Collapses again so capture stays full-bleed.
+    </div>
+  </div>
+
+  <script>
+    const captions = {
+      a: "A — Filmstrip under the shutter; projects as a soft right rail. Drag across to attach.",
+      b: "B — Single dock: session left, projects right. Slide a capture across the hairline.",
+      c: "C — Floating session sheet. Tap “Add to project” to expand into an attach list.",
+    };
+    const picker = document.getElementById("picker");
+    const caption = document.getElementById("caption");
+    picker.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-c]");
+      if (!btn) return;
+      picker.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      const id = btn.getAttribute("data-c");
+      document.querySelectorAll(".phone").forEach((p) => {
+        p.classList.toggle("active", p.getAttribute("data-id") === id);
+      });
+      caption.textContent = captions[id];
+    });
+
+    document.getElementById("cToggle").addEventListener("click", () => {
+      document.getElementById("phone-c").classList.toggle("sheet-open");
+    });
+
+    // Light interactivity for B drag hint
+    document.getElementById("phone-b").addEventListener("pointerdown", () => {
+      document.getElementById("phone-b").classList.add("dragging");
+    });
+    document.getElementById("phone-b").addEventListener("pointerup", () => {
+      document.getElementById("phone-b").classList.remove("dragging");
+    });
+  </script>
+</body>
+</html>

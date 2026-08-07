@@ -51,5 +51,30 @@ with urllib.request.urlopen(req, timeout=600) as resp:
     print(data["choices"][0]["message"]["content"][:500])
 PY
 
+EMBED_MODEL="${EMBEDDING_MODEL:-ollama/nomic-embed-text}"
+echo "=== POST /v1/embeddings (${EMBED_MODEL}) ==="
+docker compose exec -T app python - <<PY
+import json, os, urllib.error, urllib.request
+
+base = os.environ["LLM_GATEWAY_URL"].rstrip("/")
+key = os.environ.get("LLM_GATEWAY_KEY") or os.environ.get("OPENAI_API_KEY")
+model = os.environ.get("EMBEDDING_MODEL", "ollama/nomic-embed-text")
+body = json.dumps({"model": model, "input": "embedding probe"}).encode()
+req = urllib.request.Request(
+    f"{base}/embeddings",
+    data=body,
+    method="POST",
+    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+)
+try:
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        data = json.loads(resp.read().decode())
+        dim = len(data["data"][0]["embedding"])
+        print(f"OK embedding_dim={dim}")
+except urllib.error.HTTPError as e:
+    print(f"FAIL HTTP {e.code}: {e.read().decode()[:500]}")
+    raise SystemExit(1)
+PY
+
 echo ""
 echo "verify-litellm-gateway.sh OK"

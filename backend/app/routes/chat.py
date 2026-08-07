@@ -43,6 +43,7 @@ class MessageCreate(BaseModel):
     thread_session_id: UUID | None = None
     explicit_context: list[ExplicitContextItem] = Field(default_factory=list)
     model: str | None = None
+    embedding_model: str | None = None
     include_ai: bool = False
     reply_to_id: UUID | None = None
     mentioned_user_ids: list[UUID] = Field(default_factory=list)
@@ -171,10 +172,11 @@ async def delete_thread_session(
     await _require_chat_read(project_id, session.topic_node_id, current_user, db)
     from sqlalchemy import delete as sql_delete
 
-    await db.execute(
-        sql_delete(Message).where(Message.thread_session_id == session_id)
+    from app.services.ai_conversation_links import delete_thread_session_tree
+
+    await delete_thread_session_tree(
+        db, project_id=project_id, session_id=session_id
     )
-    await db.delete(session)
     await db.commit()
 
 
@@ -318,6 +320,7 @@ async def stream_message_ai(
     project_id: UUID,
     message_id: UUID,
     model: str | None = Query(default=None),
+    embedding_model: str | None = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -339,6 +342,7 @@ async def stream_message_ai(
             requester_id=current_user.id,
             requester_display_name=current_user.display_name,
             model=model,
+            embedding_model=embedding_model,
         ),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},

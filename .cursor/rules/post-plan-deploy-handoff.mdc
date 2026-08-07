@@ -1,0 +1,22 @@
+---
+description: How to close substantial implementation work — operator handoff without ritual noise.
+alwaysApply: true
+---
+
+# Completion handoff
+
+When you finish a **plan or substantial multi-file change**, close with clarity for the human operator—not a generic runbook.
+
+## Principles
+
+**Derive steps from the diff.** Include only actions implied by what changed: images, compose, env keys, migrations, one-time bootstrap, sibling stacks, verify scripts. Silence is better than irrelevant commands.
+
+**Blockers before instructions.** Failing build, branched migrations, missing credentials, or crash-looping imports must be resolved or called out first—don’t list deploy steps atop a broken tree.
+
+**Commands are pointers, not poetry.** Prefer exact lines from push-script output when images were built; otherwise reference `AGENTS.md` and `scripts/` rather than inventing paths. Never claim deploy happened unless you ran it or the user confirmed.
+
+**Verify proportionally.** Name checks that match the change surface (gateway consumer, MVP smoke, manual UX for new flows)—not every script on every typo fix.
+
+**Honest done-ness.** Plan todos and “complete” summaries align with acceptance criteria across UI, API, worker, and ops—not merely merged backend code.
+
+Structure the handoff for scanning: short sections, complete commands where used, no padded checklist.

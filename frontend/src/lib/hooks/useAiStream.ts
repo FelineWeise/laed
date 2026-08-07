@@ -2,7 +2,19 @@
 
 import { useCallback, useState } from "react";
 import { getStoredToken } from "@/lib/api";
+import {
+  isOssEmbeddingUnavailableCode,
+  parseHttpErrorBody,
+} from "@/lib/apiErrors";
+import { consumeSseResponse, type StreamResult } from "@/lib/sseClient";
 import type { ExplicitContextItem, SourceChunk } from "@/lib/types";
+
+export type { StreamResult };
+
+export type AiStreamOutcome =
+  | { status: "ok"; result: StreamResult }
+  | { status: "oss_embedding_unavailable"; message: string }
+  | { status: "error"; message: string };
 
 export type RetrievalScopePayload = {
   level: "global" | "project" | "topic";
@@ -19,25 +31,10 @@ type StreamOptions = {
   content: string;
   topicNodeId?: string | null;
   model?: string | null;
+  embeddingModel?: string | null;
   retrievalScope?: RetrievalScopePayload | null;
   explicitContext?: ExplicitContextItem[];
 };
-
-type StreamResult = {
-  content: string;
-  sourceChunks: SourceChunk[];
-  messageId: string | null;
-};
-
-function parseSseBlock(block: string): { event: string; dataLine: string } {
-  let event = "";
-  let dataLine = "";
-  for (const line of block.split("\n")) {
-    if (line.startsWith("event: ")) event = line.slice(7);
-    if (line.startsWith("data: ")) dataLine = line.slice(6);
-  }
-  return { event, dataLine };
-}
 
 export function useAiStream() {
   const [streaming, setStreaming] = useState(false);
@@ -47,13 +44,14 @@ export function useAiStream() {
     async (
       options: StreamOptions,
       onToken: (token: string) => void,
-    ): Promise<StreamResult | null> => {
+    ): Promise<AiStreamOutcome> => {
       const {
         projectId,
         conversationId,
         content,
         topicNodeId = null,
         model = null,
+        embeddingModel = null,
         retrievalScope = null,
         explicitContext = [],
       } = options;
@@ -72,12 +70,16 @@ export function useAiStream() {
         content: string;
         topic_node_id?: string | null;
         model?: string;
+        embedding_model?: string;
         retrieval_scope?: RetrievalScopePayload;
         explicit_context?: ExplicitContextItem[];
       };
       const body: StreamBody = { content };
       if (explicitContext.length > 0) {
         body.explicit_context = explicitContext;
+      }
+      if (embeddingModel) {
+        body.embedding_model = embeddingModel;
       }
       if (!isWorkspace) {
         body.topic_node_id = topicNodeId;
@@ -98,63 +100,77 @@ export function useAiStream() {
         });
 
         if (!response.ok || response.body === null) {
-          setError(`AI request failed (${response.status})`);
-          return null;
+          let detail = `AI request failed (${response.status})`;
+          let code: string | null = null;
+          try {
+            const errBody = await response.text();
+            if (errBody) {
+              const parsed = parseHttpErrorBody(errBody);
+              detail = parsed.message;
+              code = parsed.code;
+            }
+          } catch {
+            /* ignore */
+          }
+          if (isOssEmbeddingUnavailableCode(code)) {
+            setError(null);
+            return { status: "oss_embedding_unavailable", message: detail };
+          }
+          setError(detail);
+          return { status: "error", message: detail };
         }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
         let full = "";
         let sourceChunks: SourceChunk[] = [];
         let messageId: string | null = null;
         let streamFailed = false;
+        let ossBlocked = false;
+        let ossMessage = "On-device embedding is unavailable.";
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
-          buffer = parts.pop() ?? "";
-
-          for (const block of parts) {
-            const { event, dataLine } = parseSseBlock(block);
-            if (!dataLine) continue;
-            try {
-              if (event === "token") {
-                const parsed = JSON.parse(dataLine) as { content?: string };
-                if (parsed.content) {
-                  full += parsed.content;
-                  onToken(parsed.content);
-                }
-              }
-              if (event === "done") {
-                const parsed = JSON.parse(dataLine) as {
-                  message_id?: string;
-                  source_chunks?: SourceChunk[];
-                };
-                messageId = parsed.message_id ?? null;
-                sourceChunks = parsed.source_chunks ?? [];
-              }
-              if (event === "error") {
-                const parsed = JSON.parse(dataLine) as { error?: string };
-                setError(parsed.error ?? "Stream error");
-                streamFailed = true;
-              }
-            } catch {
-              /* skip malformed block */
+        await consumeSseResponse(response, (payload) => {
+          if (payload.kind === "token") {
+            full += payload.content;
+            onToken(payload.content);
+          }
+          if (payload.kind === "done") {
+            messageId = payload.messageId;
+            sourceChunks = payload.sourceChunks;
+            if (payload.content && full.length === 0) {
+              full = payload.content;
+              onToken(payload.content);
             }
           }
+          if (payload.kind === "error") {
+            if (isOssEmbeddingUnavailableCode(payload.code)) {
+              setError(null);
+              streamFailed = true;
+              ossBlocked = true;
+              ossMessage = payload.message;
+            } else {
+              setError(payload.message);
+              streamFailed = true;
+            }
+          }
+        });
+
+        if (streamFailed && ossBlocked) {
+          return { status: "oss_embedding_unavailable", message: ossMessage };
+        }
+        if (streamFailed) {
+          return { status: "error", message: "Stream error" };
+        }
+        if (full.length === 0 && messageId === null) {
+          setError("No response from AI");
+          return { status: "error", message: "No response from AI" };
         }
 
-        if (streamFailed || (full.length === 0 && messageId === null)) {
-          return null;
-        }
-
-        return { content: full, sourceChunks, messageId };
+        return {
+          status: "ok",
+          result: { content: full, sourceChunks, messageId },
+        };
       } catch {
         setError("Stream interrupted");
-        return null;
+        return { status: "error", message: "Stream interrupted" };
       } finally {
         setStreaming(false);
       }

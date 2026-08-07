@@ -1,0 +1,37 @@
+---
+description: Frontend engineering — layout, navigation context, types, design system.
+globs: frontend/**
+alwaysApply: false
+---
+
+# Frontend
+
+## UI system
+
+Tokens in `src/styles/tokens.css` are the source of truth for color, type, and spacing. The design-reference kit informs visuals; don’t paste kit code wholesale into the app.
+
+Collaboration layouts use the full viewport on wide screens; constrain width only where readability demands it (e.g. auth). **PWA usability, touch, and reflow:** `mobile-pwa-ux.mdc`.
+
+## Layout discipline
+
+Scrollable regions need a bounded flex chain (`min-h-0`, `flex-1`, intentional `overflow`). Fixed chrome (header, bottom bar) accounts for safe-area insets via shared offset tokens.
+
+Overlays and tooltips escape clipping ancestors—use portals or fixed positioning when content must not be truncated by `overflow-hidden` shells.
+
+## Navigation and context
+
+The user’s current project, topic, and session travel with API and realtime calls—scope is never “whatever the server assumes.” One canvas component serves global and project graphs; positions persist through the topology API.
+
+## Types and API
+
+Strict TypeScript; shared response shapes live in `src/lib/types`. REST and WebSocket/SSE share the same base URL strategy.
+
+## Chat surfaces
+
+Multiple chat experiences exist (private assistant vs shared thread); treat them as different transport and persistence models. Extend documented surfaces; don’t revive deprecated routes as shortcuts.
+
+Feature parity across surfaces matters: if context attachment exists in one composer, design for the others or document intentional omission.
+
+## Ship check
+
+`npm run build` must pass before you call frontend work done.

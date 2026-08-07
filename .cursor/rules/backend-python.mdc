@@ -1,0 +1,37 @@
+---
+description: Backend engineering — layering, auth, data access, imports, schema changes.
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend
+
+## Layering
+
+Routes speak HTTP; services speak domain. SQL and orchestration stay out of route handlers. Pydantic schemas define the wire contract; SQLAlchemy models define persistence.
+
+## Access and collaboration
+
+Authorization is centralized—check membership and role through shared access helpers, then enforce at the boundary. Project-wide and topic-scoped membership are different concepts; model and check the right one.
+
+Reuse existing invite/member endpoints when they already match the product intent; add tables only when scope truly differs.
+
+## Data and schema
+
+Prefer JSONB metadata over sprouting nullable columns for ad-hoc tags. Registry rows in `rag.*` must stay aligned with app UUIDs for projects and files—register on create, don’t orphan chunks.
+
+Schema changes ride Alembic with a single head. Run from `backend/` via Poetry (`poetry run alembic …`); production migrates inside the `app` container.
+
+## Integrations in code
+
+LLM and embeddings go through the gateway client module—nowhere else. Long-running or fan-out work belongs on the worker, not inside WebSocket handlers or request paths that users wait on.
+
+## Module hygiene
+
+Avoid name collisions between framework types and ORM models (import aliases at boundaries). Break circular imports by extracting shared primitives into a neutral module rather than lazy-import gymnastics.
+
+New env knobs: `Settings` + `.env.example`, documented in place.
+
+## Before you finish
+
+If the change touches AI, chat, or retrieval, confirm one shared context-builder path feeds all of them—not parallel prompt/RAG assembly.

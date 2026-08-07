@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 ChunksTable = Literal["rag.chunks_qwen3", "rag.chunks_nomic"]
 
 EMBEDDING_DIM_NOMIC = 768
+EMBEDDING_DIM_QWEN3 = 4096
 
 
 async def _set_tenant(session: AsyncSession, tenant_id: str) -> None:
@@ -48,7 +49,7 @@ async def ensure_rag_project(
     project_id: str,
     name: str,
     embedding_model: str,
-    embedding_dim: int = EMBEDDING_DIM_NOMIC,
+    embedding_dim: int = EMBEDDING_DIM_QWEN3,
 ) -> None:
     """Insert `rag.projects` with id = app project UUID (D16)."""
     await ensure_rag_tenant(session, tenant_id=tenant_id)

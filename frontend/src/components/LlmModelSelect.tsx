@@ -26,7 +26,7 @@ export function LlmModelSelect({ className = "" }: Props) {
     >
       {models.map((m) => (
         <option key={m.id} value={m.id}>
-          {m.id.replace(/^ollama\//, "").replace(/^thirdparty\//, "")}
+          {m.id.replace(/^(scaleway|ollama|thirdparty)\//, "")}
         </option>
       ))}
     </select>

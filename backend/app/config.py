@@ -25,8 +25,12 @@ class Settings(BaseSettings):
         default="",
         validation_alias=AliasChoices("LLM_GATEWAY_KEY", "OPENAI_API_KEY"),
     )
-    llm_model: str = "ollama/qwen3:14b-instruct"
-    embedding_model: str = "ollama/nomic-embed-text"
+    llm_model: str = "scaleway/qwen3.6-35b"
+    embedding_model: str = "scaleway/qwen3-embedding-8b"
+    embedding_dim: int = Field(
+        default=4096,
+        validation_alias=AliasChoices("EMBEDDING_DIM"),
+    )
 
     # Dedicated RAG Postgres (pgvector + rag.*); same URL pattern as llm-gateway RAG_DATABASE_URL
     rag_database_url: str = Field(
@@ -38,8 +42,8 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("LAED_TENANT_ID"),
     )
 
-    # STT — Parakeet
-    stt_url: str = "http://parakeet:5092"
+    # STT — routed through the LLM gateway as model `stt/parakeet`
+    # (uses llm_gateway_url / llm_gateway_key above; no direct Parakeet URL).
 
     # Task queue
     redis_url: str = "redis://redis:6379/0"

@@ -104,6 +104,25 @@ export async function apiFetch<T>(
   return JSON.parse(text) as T;
 }
 
+/** Authenticated GET that returns an object URL (revoke when done). */
+export async function apiFetchBlobUrl(path: string): Promise<string> {
+  const token = getStoredToken();
+  const headers: Record<string, string> =
+    token !== null ? { Authorization: `Bearer ${token}` } : {};
+
+  const response = await fetch(`${apiBaseUrl()}${path}`, { headers });
+  if (!response.ok) {
+    const body = await response.text();
+    if (response.status === 401 && typeof window !== "undefined") {
+      setStoredToken(null);
+      window.location.href = "/login";
+    }
+    throw new ApiError(response.statusText, response.status, body);
+  }
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export async function apiUpload<T>(
   path: string,
   formData: FormData,

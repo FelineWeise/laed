@@ -6,11 +6,43 @@ import httpx
 from app.config import settings
 
 
-def is_chat_model(model_id: str) -> bool:
-    """Schema X chat models: ollama/* and thirdparty/*; exclude stt/*."""
+_CHAT_PROVIDERS = ("scaleway/", "thirdparty/", "ollama/")
+_KNOWN_EMBEDDING_IDS = frozenset(
+    {
+        "ollama/nomic-embed-text",
+        "ollama/qwen3-embedding:8b",
+        "scaleway/qwen3-embedding-8b",
+        "scaleway/bge-embed",
+        "thirdparty/text-embedding-3-large",
+        "thirdparty/text-embedding-3-small",
+    }
+)
+
+
+def is_embedding_model(model_id: str) -> bool:
+    """True for embedding models across scaleway/thirdparty/ollama providers."""
     if model_id.startswith("stt/"):
         return False
-    return model_id.startswith("ollama/") or model_id.startswith("thirdparty/")
+    if "embed" in model_id.lower():
+        return True
+    return model_id in _KNOWN_EMBEDDING_IDS
+
+
+def is_chat_model(model_id: str) -> bool:
+    """Chat models from gateway providers; exclude stt/* and embedding models."""
+    if model_id.startswith("stt/"):
+        return False
+    if is_embedding_model(model_id):
+        return False
+    return model_id.startswith(_CHAT_PROVIDERS)
+
+
+def is_thirdparty_embedding_model(model_id: str) -> bool:
+    return model_id.startswith("thirdparty/") and is_embedding_model(model_id)
+
+
+def is_scaleway_embedding_model(model_id: str) -> bool:
+    return model_id.startswith("scaleway/") and is_embedding_model(model_id)
 
 
 class LLMClient:
@@ -104,7 +136,11 @@ class LLMClient:
                 headers=self._headers(),
                 json={"model": model, "input": text},
             )
-            resp.raise_for_status()
+            if resp.status_code >= 400:
+                detail = resp.text[:500]
+                raise RuntimeError(
+                    f"Embeddings failed ({resp.status_code}) for model {model}: {detail}"
+                )
             return resp.json()["data"][0]["embedding"]
 
     async def list_models(self) -> list[dict[str, object]]:

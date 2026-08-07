@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, apiWebSocketUrl, getStoredToken } from "@/lib/api";
+import { useThirdpartyEmbedding } from "@/lib/hooks/useThirdpartyEmbedding";
 import { useThreadAiStream } from "@/lib/hooks/useThreadAiStream";
 import type { ChatMessage, ExplicitContextItem } from "@/lib/types";
 
@@ -62,6 +63,7 @@ export function useProjectChat(
   topicId: string | null,
   sessionId: string,
   sessionAiEnabled: boolean,
+  defaultModel: string | null = null,
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
@@ -73,6 +75,20 @@ export function useProjectChat(
   const sessionIdRef = useRef(sessionId);
   const sessionAiRef = useRef(sessionAiEnabled);
   const streamedIdsRef = useRef<Set<string>>(new Set());
+  const pendingAiRef = useRef<{
+    messageId: string;
+    model: string | null;
+  } | null>(null);
+  const [embeddingPromptOpen, setEmbeddingPromptOpen] = useState(false);
+  const [embeddingPromptReason, setEmbeddingPromptReason] = useState<string | null>(
+    null,
+  );
+  const {
+    models: embeddingModels,
+    selectedId: selectedEmbeddingId,
+    selectModel: selectEmbeddingModel,
+    loading: embeddingModelsLoading,
+  } = useThirdpartyEmbedding();
   const { streamReply, streaming: streamingAi, error: streamError } =
     useThreadAiStream(projectId);
 
@@ -114,20 +130,46 @@ export function useProjectChat(
   }, [loadHistory, sessionId]);
 
   const startAiStream = useCallback(
-    async (humanMessageId: string, model: string | null) => {
+    async (
+      humanMessageId: string,
+      model: string | null,
+      embeddingModel: string | null = null,
+    ) => {
       if (streamedIdsRef.current.has(humanMessageId)) return;
       streamedIdsRef.current.add(humanMessageId);
       setStreamText("");
-      await streamReply(
+      const outcome = await streamReply(
         humanMessageId,
         (token) => setStreamText((prev) => prev + token),
         model,
+        embeddingModel,
       );
       setStreamText("");
+      if (outcome.status === "oss_embedding_unavailable") {
+        streamedIdsRef.current.delete(humanMessageId);
+        pendingAiRef.current = { messageId: humanMessageId, model };
+        setEmbeddingPromptReason(outcome.message);
+        setEmbeddingPromptOpen(true);
+        return;
+      }
       await loadHistory();
     },
     [streamReply, loadHistory],
   );
+
+  const confirmEmbeddingFallback = useCallback(() => {
+    const pending = pendingAiRef.current;
+    if (!pending || !selectedEmbeddingId) return;
+    setEmbeddingPromptOpen(false);
+    pendingAiRef.current = null;
+    void startAiStream(pending.messageId, pending.model, selectedEmbeddingId);
+  }, [startAiStream, selectedEmbeddingId]);
+
+  const cancelEmbeddingFallback = useCallback(() => {
+    setEmbeddingPromptOpen(false);
+    pendingAiRef.current = null;
+    setEmbeddingPromptReason(null);
+  }, []);
 
   useEffect(() => {
     const authToken = getStoredToken();
@@ -185,7 +227,11 @@ export function useProjectChat(
           ) {
             return;
           }
-          appendMessage(payloadToMessage(raw, projectId));
+          const msg = payloadToMessage(raw, projectId);
+          appendMessage(msg);
+          if (raw.invoke_ai && raw.id) {
+            void startAiStream(String(raw.id), defaultModel);
+          }
         } catch {
           /* ignore malformed */
         }
@@ -201,7 +247,7 @@ export function useProjectChat(
       wsRef.current = null;
       setConnected(false);
     };
-  }, [projectId, appendMessage, startAiStream]);
+  }, [projectId, appendMessage, startAiStream, defaultModel]);
 
   const send = useCallback(
     async (
@@ -271,5 +317,15 @@ export function useProjectChat(
     streamText,
     streamingAi,
     streamError,
+    embeddingFallback: {
+      open: embeddingPromptOpen,
+      reason: embeddingPromptReason,
+      models: embeddingModels,
+      selectedId: selectedEmbeddingId,
+      onSelect: selectEmbeddingModel,
+      loading: embeddingModelsLoading,
+      onConfirm: confirmEmbeddingFallback,
+      onCancel: cancelEmbeddingFallback,
+    },
   };
 };

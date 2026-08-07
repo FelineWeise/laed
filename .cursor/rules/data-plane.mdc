@@ -1,0 +1,39 @@
+---
+description: Vectors, RAG, retrieval scope, ingestion, files, sharing — data-plane principles.
+globs: backend/app/services/rag*.py,backend/app/services/ingestion.py,backend/app/services/retrieval/**,backend/app/services/sharing/**,backend/app/services/file_service.py,backend/app/routes/files.py,backend/app/routes/ai.py,backend/app/services/chat_context.py,backend/app/services/explicit_context.py
+alwaysApply: false
+---
+
+# Data plane (RAG, files, sharing)
+
+Architecture reference: `../docs/rag-vector-architecture.md`. Confirm table names and dimensions in repo before generating migrations.
+
+## Retrieval philosophy
+
+**Scope is part of the query.** Every search runs inside an explicit scope value object (global / project / topic / linked sets)—not “search everything, filter in Python.”
+
+**Filter where data lives.** Predicates belong in SQL against pgvector rows. Post-filtering embeddings is a correctness and privacy failure mode.
+
+**Metadata carries placement.** Chunks and documents record who, what project, what topic, what folder, and visibility—extend via migrations and backfill when the product adds axes; don’t bolt scope on later in application code alone.
+
+**Navigation context is input.** Whatever the user sees (project, topic, folder) must be serialized on the request; log resolved scope when debugging retrieval.
+
+## Registry and ingestion
+
+Register projects and files in `rag.*` before writing chunks; IDs mirror app UUIDs. Ingestion is asynchronous—upload marks pending; worker embeds through the gateway into the canonical chunk table (prefer the indexed, production dimension table).
+
+Dual-store schemas in the app DB are legacy unless the task explicitly migrates them.
+
+## Sharing and linked context
+
+Cross-user access is enforced at query time—revocation means “exclude on next read,” not necessarily re-embedding everything. Cap fan-out for linked projects; bias ranking toward the user’s home scope when combining corpora.
+
+User-facing compartments are **folders**; object-store buckets are infrastructure naming—keep user language consistent in APIs.
+
+## Gateway dependency
+
+Embeddings and chat models come from the shared LiteLLM stack. Don’t stand up parallel vector stores (e.g. Chroma) without an explicit architectural decision.
+
+## Config
+
+All knobs through `Settings` and `.env.example`—no scattered environment reads in services.

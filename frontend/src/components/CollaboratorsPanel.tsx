@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import { Person } from "@/components/icons";
 import { UserSearchCombobox } from "@/components/UserSearchCombobox";
 import type { Member, UserSearchResult } from "@/lib/types";
 
@@ -61,12 +62,12 @@ export function CollaboratorsPanel({ projectId, topicNodeId }: Props) {
   }
 
   return (
-    <section className="laed-tab-scroll p-4">
-      <p className="laed-label mb-1">
-        {topicNodeId !== null ? "Topic collaborators" : "Project collaborators"}
-      </p>
-      <p className="mb-4 text-[9px] text-[var(--laed-muted)]">
-        All collaborators have equal access for now. Roles can be refined later.
+    <section className="laed-tab-scroll px-4 py-3.5">
+      <div className="mb-2.5 text-[12px] font-semibold tracking-[0.2px] text-[var(--laed-muted)]">
+        Members · {members.length}
+      </div>
+      <p className="mb-3 text-[9px] text-[var(--laed-muted)]">
+        Invite partners by email. Online status is a placeholder for now.
       </p>
 
       <UserSearchCombobox onSelect={handleSelect} />
@@ -75,32 +76,44 @@ export function CollaboratorsPanel({ projectId, topicNodeId }: Props) {
         <p className="mt-2 text-[9px] text-red-700">{error}</p>
       ) : null}
 
-      <ul className="mt-6">
-        {loading ? (
-          <li className="text-[9px] text-[var(--laed-muted)]">Loading…</li>
-        ) : null}
+      {loading ? (
+        <p className="mt-4 text-[9px] text-[var(--laed-muted)]">Loading…</p>
+      ) : null}
+
+      <div className="mt-4 flex flex-col gap-[9px]">
         {members.map((m) => (
-          <li
+          <div
             key={m.user_id}
-            className="flex items-center justify-between border-b border-[var(--laed-border)] py-3"
+            className="flex items-center gap-3 rounded-2xl bg-white px-[13px] py-[11px]"
+            style={{
+              boxShadow:
+                "0 1px 2px rgba(26,25,23,0.04), 0 6px 16px rgba(26,25,23,0.04)",
+            }}
           >
-            <div>
-              <div className="text-[11px] font-medium text-[var(--laed-ink)]">
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--laed-navy)]"
+              style={{ background: "rgba(29,58,87,0.09)" }}
+            >
+              <Person size={18} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13.5px] font-semibold text-[var(--laed-ink)]">
                 {m.display_name ?? "User"}
               </div>
-              <div className="text-[9px] text-[var(--laed-muted)]">
-                {m.email ?? m.user_id}
-              </div>
-              <div className="mt-0.5 text-[8px] uppercase tracking-[1px] text-[var(--laed-muted)]">
-                {m.role}
+              <div className="mt-0.5 text-[11px] text-[var(--laed-muted)]">
+                Internal · {m.role}
               </div>
             </div>
+            <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--laed-green)]">
+              <span className="h-[7px] w-[7px] rounded-full bg-[var(--laed-green)]" />
+              Online
+            </span>
             {m.role !== "owner" ? (
               <button
                 type="button"
-                className="text-[8px] uppercase tracking-[1px] text-[var(--laed-muted)] hover:text-red-700"
+                className="ml-1 border-none bg-transparent p-0 text-[8px] tracking-[1px] text-[var(--laed-muted)] uppercase hover:text-red-700"
                 onClick={() => {
-                  if (window.confirm("Remove this collaborator?")) {
+                  if (window.confirm("Remove this member?")) {
                     void remove(m.user_id);
                   }
                 }}
@@ -108,9 +121,9 @@ export function CollaboratorsPanel({ projectId, topicNodeId }: Props) {
                 Remove
               </button>
             ) : null}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 # LAED — agent baseline
 
-Scoped Cursor rules: `.cursor/rules/*.mdc`. After plan execution, agents output a context-specific deploy checklist (`post-plan-deploy-handoff.mdc`).
+Principle-based Cursor rules: `.cursor/rules/*.mdc` (core always-on; domain rules by glob). Sovereignty USP (EU closed-loop, UI trust cues): `security-sovereignty.mdc`. Mobile PWA usability & responsive layout: `mobile-pwa-ux.mdc`. Facts live here and in `docs/`—rules teach how to work, not copy-paste runbooks.
 
 Secure collaboration platform (laed.eu). Backend at `/opt/laed` on `laed-base`,
 on external network `llm-backbone` alongside llm-gateway and OpenClaw.

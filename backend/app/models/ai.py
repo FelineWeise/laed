@@ -19,6 +19,10 @@ class AIConversation(BaseMixin, Base):
         ForeignKey("topology_nodes.id", ondelete="SET NULL"),
         nullable=True,
     )
+    linked_thread_session_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("thread_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
 
 class AIMessage(BaseMixin, Base):

@@ -1,0 +1,27 @@
+---
+description: Release engineering — build off-server, pin immutably, migrate deliberately, verify behavior.
+globs: scripts/**,docker-compose.yml,Caddyfile,docs/**Deploy*,docs/**Ops*,docs/README-scaleway*,.env.example
+alwaysApply: false
+---
+
+# Deploy and ops
+
+Contract: `../scaleway-push-template.md`. Commands: `scripts/push_*.sh` (they print server steps).
+
+## Principles
+
+**Build elsewhere, run elsewhere.** Images are produced and pushed from dev/CI; servers pull, pin, and recreate—never compile app images on production hosts.
+
+**Immutable releases.** Prefer digest or content-addressed tags over floating `:latest` for anything operators depend on.
+
+**Config is layered.** Compose and proxy files sync when they change; secrets live in server `.env`—merge new keys from `.env.example`, don’t blindly overwrite production secrets.
+
+**Schema follows code.** Backend releases that change models require migration to head in the running `app` container before you treat deploy as complete.
+
+**One-time vs recurring.** Infrastructure bootstrap (RAG role, seed SQL) is volume-lifetime; migrations and image rollouts are per release. Don’t repeat bootstrap rituals every push.
+
+**Verify behavior, not just health.** Use repo verify scripts that exercise gateway consumer paths and core API flows—not only `docker compose ps`.
+
+**Dependency order.** External gateway before LAED before dependent siblings on cold boot.
+
+Sensitive proxy auth material stays out of compose `.env` files that break on interpolation—follow the repo’s split-env pattern.

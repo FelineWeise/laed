@@ -6,7 +6,6 @@ import { apiFetch } from "@/lib/api";
 import type { Member } from "@/lib/types";
 import { AppMenu } from "@/components/AppMenu";
 import { AppShell } from "@/components/AppShell";
-import { AssistantPanel } from "@/components/AssistantPanel";
 import { AuthGuard } from "@/components/AuthGuard";
 import { BottomBar } from "@/components/BottomBar";
 import { TopologyCanvas } from "@/components/TopologyCanvas";
@@ -19,7 +18,6 @@ export default function ProjectCanvasPage() {
   const projectId = params.id as string;
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(false);
   const [myUserId, setMyUserId] = useState<string | null>(null);
   const [myRole, setMyRole] = useState<string | null>(null);
 
@@ -91,12 +89,11 @@ export default function ProjectCanvasPage() {
   return (
     <AuthGuard>
       <AppShell
-        breadcrumb={{
-          label: `← ${projectName.toUpperCase()}`,
-          onClick: () => router.push("/global"),
-        }}
+        section={projectName}
+        onHome={() => router.push("/global")}
         menuOpen={menuOpen}
         onMenu={() => setMenuOpen((o) => !o)}
+        chrome="project"
         right={
           <div className="flex items-center gap-3">
             {canDelete ? (
@@ -130,23 +127,14 @@ export default function ProjectCanvasPage() {
               onNodeTap={handleTap}
               onNodeDragEnd={(id, pos) => void updatePosition(id, pos)}
               fillHeight
+              accent="project"
               badgesByNodeId={badgesByNodeId}
               gridId={`grid-project-${projectId}`}
             />
           ) : null}
         </div>
         <AppMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
-        <AssistantPanel
-          open={assistantOpen}
-          onClose={() => setAssistantOpen(false)}
-          context="project"
-          projectId={projectId}
-        />
-        <BottomBar
-          projectId={projectId}
-          assistantOpen={assistantOpen}
-          onAssistantToggle={() => setAssistantOpen((o) => !o)}
-        />
+        <BottomBar projectId={projectId} variant="project" />
       </AppShell>
     </AuthGuard>
   );

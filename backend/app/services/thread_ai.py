@@ -14,12 +14,12 @@ from app.config import settings
 from app.models.message import Message
 from app.schemas.ai import MessageCreate
 from app.schemas.context import ExplicitContextItem
+from app.services.ai_chat import iter_assistant_tokens
 from app.services.agent_loop import run_agent_loop
 from app.services.chat_context import build_chat_context
 from app.services.chat_broadcast import CHANNEL_PREFIX, chat_redis, message_payload
 from app.services.conversation_index import index_conversation_turn
-from app.services.llm import llm_stream
-from app.services.llm_messages import flatten_messages_for_stream
+from app.services.embedding_errors import OssEmbeddingUnavailable
 from app.services.rag import build_source_chunks
 
 AI_MENTION = re.compile(r"@(?:ai|laed)\b", re.IGNORECASE)
@@ -54,6 +54,7 @@ async def stream_thread_ai_reply(
     requester_id: UUID,
     requester_display_name: str,
     model: str | None = None,
+    embedding_model: str | None = None,
 ) -> AsyncIterator[str]:
     """SSE: token events, then persist AI message and publish to project chat channel."""
     human = await db.get(Message, human_message_id)
@@ -81,27 +82,52 @@ async def stream_thread_ai_reply(
         content=prompt_text,
         topic_node_id=human.topic_node_id,
         explicit_context=[],
+        model=model,
+        embedding_model=embedding_model,
     )
-    system, llm_messages, hits = await build_chat_context(
-        db,
-        user_id=requester_id,
-        project_id=project_id,
-        body=body,
-        mode="project",
-        thread_history=True,
-        thread_session_id=human.thread_session_id,
-    )
+    try:
+        system, llm_messages, hits = await build_chat_context(
+            db,
+            user_id=requester_id,
+            project_id=project_id,
+            body=body,
+            mode="project",
+            thread_history=True,
+            thread_session_id=human.thread_session_id,
+        )
+    except OssEmbeddingUnavailable as exc:
+        yield (
+            "event: error\ndata: "
+            + json.dumps(
+                {
+                    "code": "oss_embedding_unavailable",
+                    "message": str(exc),
+                }
+            )
+            + "\n\n"
+        )
+        return
+    except Exception as exc:
+        yield f"event: error\ndata: {json.dumps({'error': str(exc)})}\n\n"
+        return
 
     llm_model = (model or "").strip() or settings.llm_model
     full_messages = [{"role": "system", "content": system}, *llm_messages]
-    full_messages = await run_agent_loop(full_messages, model=llm_model)
-    stream_messages = flatten_messages_for_stream(full_messages)
+    if not llm_messages:
+        yield f"event: error\ndata: {json.dumps({'error': 'No messages to send to the model'})}\n\n"
+        return
+    full_messages, direct_reply = await run_agent_loop(full_messages, model=llm_model)
 
     full_parts: list[str] = []
     try:
-        async for token in llm_stream(stream_messages, model=llm_model):
+        async for token in iter_assistant_tokens(
+            full_messages, model=llm_model, direct_reply=direct_reply
+        ):
             full_parts.append(token)
             yield f"event: token\ndata: {json.dumps({'content': token})}\n\n"
+    except ValueError as exc:
+        yield f"event: error\ndata: {json.dumps({'error': str(exc)})}\n\n"
+        return
     except Exception as exc:
         yield f"event: error\ndata: {json.dumps({'error': str(exc)})}\n\n"
         return
@@ -145,6 +171,7 @@ async def stream_thread_ai_reply(
         {
             "message_id": str(ai_msg.id),
             "source_chunks": source_chunks,
+            "content": assistant_text,
         }
     )
     yield f"event: done\ndata: {done_payload}\n\n"

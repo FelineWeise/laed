@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { AuthGuard } from "@/components/AuthGuard";
 import { BottomBar } from "@/components/BottomBar";
+import { LlmModelSelect } from "@/components/LlmModelSelect";
 import { apiFetch } from "@/lib/api";
 import { useAiStream } from "@/lib/hooks/useAiStream";
+import { useLlmModels } from "@/lib/hooks/useLlmModels";
+import { ThirdpartyEmbeddingPrompt } from "@/components/ThirdpartyEmbeddingPrompt";
+import { useThirdpartyEmbedding } from "@/lib/hooks/useThirdpartyEmbedding";
 import { MessageSources } from "@/components/MessageSources";
 import type { AiMessage, Conversation, Project } from "@/lib/types";
 
@@ -27,6 +31,18 @@ export default function AiPage() {
   const [draft, setDraft] = useState("");
   const [streamText, setStreamText] = useState("");
   const { streamMessage, streaming, error } = useAiStream();
+  const { selectedId: llmModelId } = useLlmModels();
+  const {
+    models: embeddingModels,
+    selectedId: selectedEmbeddingId,
+    selectModel: selectEmbeddingModel,
+    loading: embeddingModelsLoading,
+  } = useThirdpartyEmbedding();
+  const [embeddingPromptOpen, setEmbeddingPromptOpen] = useState(false);
+  const [embeddingPromptReason, setEmbeddingPromptReason] = useState<string | null>(
+    null,
+  );
+  const pendingUserTextRef = useRef<string | null>(null);
 
   useEffect(() => {
     void apiFetch<Project[]>("/api/projects").then((list) => {
@@ -78,12 +94,14 @@ export default function AiPage() {
       },
     ]);
 
-    const result = await streamMessage(
+    const outcome = await streamMessage(
       {
         projectId,
         conversationId,
         content: userText,
         topicNodeId: null,
+        model: llmModelId || null,
+        embeddingModel: null,
         retrievalScope: {
           level: "project",
           project_ids: [projectId],
@@ -94,7 +112,56 @@ export default function AiPage() {
       (token) => setStreamText((s) => s + token),
     );
 
-    if (result !== null) {
+    if (outcome.status === "ok") {
+      const result = outcome.result;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: result.messageId ?? `asst-${Date.now()}`,
+          conversation_id: conversationId,
+          role: "assistant",
+          content: result.content,
+          source_chunks: result.sourceChunks,
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setStreamText("");
+      return;
+    }
+
+    setStreamText("");
+    if (outcome.status === "oss_embedding_unavailable") {
+      pendingUserTextRef.current = userText;
+      setEmbeddingPromptReason(outcome.message);
+      setEmbeddingPromptOpen(true);
+    }
+  }
+
+  async function retryWithThirdpartyEmbedding() {
+    const userText = pendingUserTextRef.current;
+    if (!userText || !selectedEmbeddingId) return;
+    setEmbeddingPromptOpen(false);
+    pendingUserTextRef.current = null;
+    setStreamText("");
+    const outcome = await streamMessage(
+      {
+        projectId,
+        conversationId,
+        content: userText,
+        topicNodeId: null,
+        model: llmModelId || null,
+        embeddingModel: selectedEmbeddingId,
+        retrievalScope: {
+          level: "project",
+          project_ids: [projectId],
+          session_scope_id: conversationId,
+          include_constituent_topics: true,
+        },
+      },
+      (token) => setStreamText((s) => s + token),
+    );
+    if (outcome.status === "ok") {
+      const result = outcome.result;
       setMessages((prev) => [
         ...prev,
         {
@@ -112,6 +179,20 @@ export default function AiPage() {
 
   return (
     <AuthGuard>
+      <ThirdpartyEmbeddingPrompt
+        open={embeddingPromptOpen}
+        reason={embeddingPromptReason}
+        models={embeddingModels}
+        selectedId={selectedEmbeddingId}
+        onSelect={selectEmbeddingModel}
+        loading={embeddingModelsLoading}
+        onConfirm={() => void retryWithThirdpartyEmbedding()}
+        onCancel={() => {
+          setEmbeddingPromptOpen(false);
+          pendingUserTextRef.current = null;
+          setEmbeddingPromptReason(null);
+        }}
+      />
       <AppShell
         breadcrumb={{ label: "← AI", onClick: () => router.push("/global") }}
       >
@@ -129,7 +210,7 @@ export default function AiPage() {
             </button>
           ))}
         </div>
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-28 pt-2">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-2 pb-[var(--laed-bottom-bar-offset)]">
           {messages.map((m) =>
             m.role === "user" ? (
               <div key={m.id} className="mb-3 flex flex-row-reverse">
@@ -181,7 +262,8 @@ export default function AiPage() {
         {error !== null ? (
           <p className="px-4 text-[10px] text-red-700">{error}</p>
         ) : null}
-        <div className="fixed bottom-0 left-0 right-0 z-[150] flex w-full items-center justify-center gap-3 border-t border-[var(--laed-border)] bg-[var(--laed-paper)] px-4 py-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+        <div className="fixed bottom-0 left-0 right-0 z-[150] flex w-full flex-wrap items-center justify-center gap-3 border-t border-[var(--laed-border)] bg-[var(--laed-paper)] px-4 py-4 pb-[max(20px,env(safe-area-inset-bottom))]">
+          <LlmModelSelect className="max-w-[160px] shrink-0 border border-[var(--laed-border)] bg-white px-2 py-1 text-[9px]" />
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -199,7 +281,7 @@ export default function AiPage() {
             ●
           </button>
         </div>
-        <BottomBar />
+        <BottomBar variant="project" />
       </AppShell>
     </AuthGuard>
   );

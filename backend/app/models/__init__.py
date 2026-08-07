@@ -3,6 +3,7 @@ from app.models.user import User
 from app.models.project import Project, ProjectMember
 from app.models.message import Message
 from app.models.file import File, FileChunk
+from app.models.file_grant import FileGrant
 from app.models.ai import AIConversation, AIMessage
 from app.models.harness import HarnessDocument
 from app.models.access_log import AccessLog
@@ -19,7 +20,7 @@ from app.models.capture_session import CaptureAsset, CaptureSession
 __all__ = [
     "Base", "BaseMixin", "engine", "async_session", "get_db",
     "User", "Project", "ProjectMember", "Message",
-    "File", "FileChunk", "AIConversation", "AIMessage", "HarnessDocument", "AccessLog",
+    "File", "FileChunk", "FileGrant", "AIConversation", "AIMessage", "HarnessDocument", "AccessLog",
     "TopologyNode", "TopologyEdge",
     "Folder", "FolderInclusionSetting",
     "ProjectShareGrant", "ShareGrantAuditLog", "UserConnection",

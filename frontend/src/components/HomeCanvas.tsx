@@ -93,10 +93,14 @@ export function HomeCanvas({
   }
 
   return (
-    <div className="laed-page-fill px-4 pt-2 md:px-6">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-2 md:px-6">
       <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
         <p className="laed-label mr-2">Projects</p>
-        <button type="button" onClick={onAddNew} className="laed-btn-primary py-1.5 px-3 text-[9px]">
+        <button
+          type="button"
+          onClick={onAddNew}
+          className="laed-btn-private py-1.5 px-3 text-[9px]"
+        >
           + New
         </button>
         <button
@@ -104,7 +108,7 @@ export function HomeCanvas({
           onClick={() => setGroupByTags((v) => !v)}
           className={`laed-label border px-2 py-1 ${
             groupByTags
-              ? "border-[var(--laed-navy)] bg-[var(--laed-navy)] text-white"
+              ? "border-[var(--laed-private-accent)] bg-[var(--laed-private-accent)] text-white"
               : "border-[var(--laed-border)] bg-white text-[var(--laed-muted)]"
           }`}
           style={{ borderRadius: "var(--laed-radius-sm)" }}
@@ -120,7 +124,7 @@ export function HomeCanvas({
             onClick={() => setActiveTag(null)}
             className={`rounded-full border px-2 py-0.5 text-[9px] ${
               activeTag === null
-                ? "border-[var(--laed-navy)] bg-[var(--laed-navy)] text-white"
+                ? "border-[var(--laed-private-accent)] bg-[var(--laed-private-accent)] text-white"
                 : "border-[var(--laed-border)] text-[var(--laed-muted)]"
             }`}
           >
@@ -133,7 +137,7 @@ export function HomeCanvas({
               onClick={() => setActiveTag(tag)}
               className={`rounded-full border px-2 py-0.5 text-[9px] ${
                 activeTag === tag
-                  ? "border-[var(--laed-navy)] bg-[var(--laed-navy)] text-white"
+                  ? "border-[var(--laed-private-accent)] bg-[var(--laed-private-accent)] text-white"
                   : "border-[var(--laed-border)] text-[var(--laed-muted)]"
               }`}
             >
@@ -150,6 +154,7 @@ export function HomeCanvas({
         onNodeDragEnd={onNodeDragEnd}
         allowProjectDrag
         fillHeight
+        accent="private"
         positionOverrides={positionOverrides}
         badgesByNodeId={badgesByNodeId}
         gridId="home-topology-grid"

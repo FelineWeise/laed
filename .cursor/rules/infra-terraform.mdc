@@ -1,0 +1,21 @@
+---
+description: Infrastructure as code — governance, networking truth, separation from release scripts.
+globs: infra/**
+alwaysApply: false
+---
+
+# Infrastructure
+
+## Principles
+
+**Terraform shapes environments; scripts ship artifacts.** Don’t conflate `terraform apply` with day-to-day image push unless the task explicitly ties them.
+
+**Base-server changes are high risk.** Diffs touching laed-base need human review before apply (`DECISIONS.md`).
+
+**Networking facts must match reality.** Private vs public route metrics and security-group source CIDRs are about which NIC replies—wrong values fail silently as timeouts, not obvious errors. Read examples in-repo before editing.
+
+**GPU data ownership** follows the daemon user on the instance—permissions are operational correctness, not polish.
+
+**Runtime apps don’t call Ollama directly.** GPU hosts serve models; LAED talks to LiteLLM on the backbone network.
+
+Billing alerts may be manual console work where no Terraform resource exists—document, don’t invent resources.

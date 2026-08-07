@@ -29,6 +29,12 @@ def object_key(project_id: UUID, file_id: UUID, filename: str) -> str:
     return f"projects/{project_id}/{file_id}/{filename}"
 
 
+def user_capture_object_key(
+    user_id: UUID, session_id: UUID, asset_id: UUID, filename: str
+) -> str:
+    return f"users/{user_id}/capture/{session_id}/{asset_id}/{filename}"
+
+
 def ensure_bucket(bucket: str = "laed") -> None:
     client = get_minio()
     if not client.bucket_exists(bucket):
@@ -78,3 +84,26 @@ def presigned_get_url(minio_key: str, *, bucket: str = "laed", expires_hours: in
 
 def new_file_id() -> UUID:
     return uuid4()
+
+
+def upload_user_capture_bytes(
+    user_id: UUID,
+    session_id: UUID,
+    asset_id: UUID,
+    filename: str,
+    data: bytes,
+    content_type: str | None,
+    *,
+    bucket: str = "laed",
+) -> str:
+    ensure_bucket(bucket)
+    key = user_capture_object_key(user_id, session_id, asset_id, filename)
+    client = get_minio()
+    client.put_object(
+        bucket,
+        key,
+        io.BytesIO(data),
+        length=len(data),
+        content_type=content_type or "application/octet-stream",
+    )
+    return key

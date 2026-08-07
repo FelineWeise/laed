@@ -1,0 +1,50 @@
+---
+description: Usability, readability, and responsive PWA behavior — mobile-first layouts that reflow across viewports; API shapes that support lean mobile clients.
+globs: frontend/**,backend/app/routes/**,backend/app/schemas/**
+alwaysApply: false
+---
+
+# Mobile PWA & usable UI
+
+LAED ships as a **Progressive Web App** (standalone, installable). Every UI change should remain **readable, operable, and calm** on a phone—and **scale up** without a separate “desktop rewrite.”
+
+## Usability principles
+
+**Legibility first.** Type sizes, contrast, and line length suit real reading and chat—not dense admin tables shrunk to fit. Prefer tokens over one-off pixel values.
+
+**Touch-native.** Interactive targets are easy to hit on thumb reach; hover-only affordances are not the only way to discover actions. Spacing separates tappable elements.
+
+**Progressive disclosure.** Show what the current viewport needs; collapse sidebars and history into overlays/drawers on narrow screens rather than squeezing columns.
+
+**Forgiving flows.** Loading, empty, and error states are designed—not afterthoughts. Long operations show feedback; destructive actions confirm in mobile-friendly patterns.
+
+## Responsive layout
+
+**Fluid, not frozen.** Layouts reflow with viewport width and height—no hard-coded phone shells on desktop unless a surface is intentionally narrow (e.g. auth).
+
+**Dynamic chrome.** Headers, bottom bars, tab strips, and composers respect safe-area insets and shared offset tokens. Scrollable content lives in a proper flex chain so keyboards and toolbars don’t steal the message area.
+
+**Canvas and data views.** Graphs, grids, and topology adapt node density and controls to available space (resize observers, breakpoints, or proportional layout)—center and scale content instead of clipping or leaving dead margins.
+
+**Overlays that survive the viewport.** Popovers, tooltips, and sheets position within the visible area (portals, max-width, viewport-aware placement)—nothing important clipped off-screen.
+
+Test mentally at **narrow (~390px), tablet, and wide** before calling UI done.
+
+## PWA identity
+
+Honor `manifest.json` theme/background colors and standalone display. Avoid patterns that break “Add to Home Screen” (e.g. relying on browser chrome, non-HTTPS assumptions in prod).
+
+## Backend touchpoints (when relevant)
+
+APIs support mobile clients without forcing desktop-only assumptions:
+
+- **Pagination and sane payloads** for lists (projects, files, messages, search)—avoid responses that require desktop scrolling through huge JSON blobs.
+- **Stable field shapes** in schemas so the client can render cards and rows predictably at any width.
+- **Uploads and timeouts** tolerant of mobile network latency; clear error messages the UI can show inline.
+- **Media and previews** where used: dimensions or variants that don’t force the client to download desktop-sized assets on mobile.
+
+Backend does not dictate pixels—but it should not **block** a responsive front end.
+
+## Definition of done (UI tasks)
+
+A feature is incomplete if it only works on one viewport, hides primary actions on mobile, or degrades readability when the window resizes. `npm run build` passes and the layout reflow story is intentional.

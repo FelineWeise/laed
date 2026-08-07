@@ -88,7 +88,7 @@ for row in data:
 
 report_images() {
   local region="$1"
-  local required="${LAED_REGISTRY_IMAGES:-backend frontend parakeet}"
+  local required="${LAED_REGISTRY_IMAGES:-backend frontend}"
   local existing="" name
 
   if [[ -z "${REGISTRY_NAMESPACE_ID:-}" ]]; then

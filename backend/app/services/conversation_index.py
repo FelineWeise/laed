@@ -4,15 +4,14 @@ import asyncio
 import hashlib
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.config import settings
 from app.services.ingestion import CHUNK_SIZE, _chunk_text
-from app.services.rag import DEFAULT_CHUNKS_TABLE
+from app.services.rag import resolve_embedding_store
+from app.services.rag_session import isolated_rag_session_factory
 from app.services.retrieval.retriever import ChunkIn, RagRetriever
 from app.worker import celery_app
-
-CHUNKS_TABLE = DEFAULT_CHUNKS_TABLE
 
 
 async def _index_text_async(
@@ -21,6 +20,7 @@ async def _index_text_async(
     document_id: str,
     text: str,
     metadata: dict[str, object],
+    session_factory: async_sessionmaker[AsyncSession] | None = None,
 ) -> None:
     if not settings.rag_database_url or not settings.laed_tenant_id:
         return
@@ -31,11 +31,12 @@ async def _index_text_async(
         {"index": i, "content": part, "metadata": {**metadata, "chunk": i}}
         for i, part in enumerate(parts)
     ]
+    chunks_table, _dim = resolve_embedding_store(settings.embedding_model)
     retriever = RagRetriever(
         tenant_id=settings.laed_tenant_id,
         project_id=str(project_id),
         embedding_model=settings.embedding_model,
-        chunks_table=CHUNKS_TABLE,
+        chunks_table=chunks_table,
     )
     topic_raw = metadata.get("topic_node_id")
     topic_node_id = str(topic_raw) if topic_raw else None
@@ -47,6 +48,7 @@ async def _index_text_async(
         document_metadata=metadata,
         topic_node_id=topic_node_id,
         visibility_scope="project",
+        session_factory=session_factory,
     )
 
 
@@ -59,9 +61,10 @@ async def _run_index_with_fresh_engine(
     """Celery workers need a per-task engine (forked process + asyncio.run)."""
     if not settings.rag_database_url:
         return
-    engine = create_async_engine(settings.rag_database_url, pool_pre_ping=True)
-    try:
-        factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+    async with isolated_rag_session_factory() as factory:
+        if factory is None:
+            return
         async with factory() as session:
             from app.services.rag_registry import ensure_rag_tenant
 
@@ -72,9 +75,8 @@ async def _run_index_with_fresh_engine(
             document_id=document_id,
             text=text,
             metadata=metadata,
+            session_factory=factory,
         )
-    finally:
-        await engine.dispose()
 
 
 @celery_app.task(name="index_conversation_turn")

@@ -8,17 +8,18 @@ Public ids on the gateway (`GET /v1/models`):
 
 | Tier | Pattern | Example |
 |------|---------|---------|
-| oss | `ollama/<name>` | `ollama/qwen3:14b-instruct` |
-| thirdparty | `thirdparty/<slug>` | `thirdparty/claude-opus-4-7` (auto-synced from Eraneos) |
+| scaleway | `scaleway/<slug>` | `scaleway/qwen3.6-35b` (EU-primary, Scaleway Generative APIs) |
+| thirdparty | `thirdparty/<slug>` | `thirdparty/claude-opus-4-7` (fallback, Eraneos) |
 | stt | `stt/<name>` | `stt/parakeet` |
 
-**LAED** uses gateway ids directly in `.env` (`LLM_MODEL=ollama/qwen3:14b-instruct`).
+**LAED** uses gateway ids directly in `.env` (`LLM_MODEL=scaleway/qwen3.6-35b`).
 
-**OpenClaw** uses a qualified id: `litellm/<gateway_id>` (e.g. `litellm/ollama/qwen3:14b-instruct`). The `litellm/` prefix is OpenClaw’s provider name, not part of the gateway URL.
+**OpenClaw** uses a qualified id: `litellm/<gateway_id>` (e.g. `litellm/scaleway/qwen3.6-35b`).
 
 Use **`GET /v1/model/info`** for metadata (`routing_tier`, `upstream_id`, `litellm_provider`). `/v1/models` `owned_by: "openai"` is a LiteLLM quirk. Do not use `model_info.tier` — LiteLLM reserves that for `free`/`paid` pricing.
 
-Config SSOT: `llm-gateway/models.manifest.yaml` → `scripts/build_litellm_config.sh` → `litellm-config.yaml`.
+Config SSOT: `llm-gateway/scaleway.catalog.yaml` + `models.manifest.yaml` →
+`scripts/build_litellm_config.sh` (syncs Scaleway + thirdparty) → `litellm-config.yaml`.
 
 ## Required gateway stack
 
@@ -36,11 +37,11 @@ docker compose up -d
 Keep these in `laed/.env`:
 
 - `LLM_GATEWAY_URL=http://litellm:4000/v1` (or `OPENAI_BASE_URL` — same value)
-- `LLM_GATEWAY_KEY` / `OPENAI_API_KEY` — **must match** `LITELLM_MASTER_KEY` in `llm-gateway/.env`
-- `LLM_MODEL` / `EMBEDDING_MODEL` — gateway canonical ids (`ollama/qwen3:14b-instruct`, `ollama/nomic-embed-text`)
+- `LLM_GATEWAY_KEY` / `OPENAI_API_KEY` — budgeted virtual key from `llm-gateway/scripts/provision_consumer_keys.sh` (not `LITELLM_MASTER_KEY`)
+- `LLM_MODEL` / `EMBEDDING_MODEL` — gateway canonical ids (`scaleway/qwen3.6-35b`, `scaleway/qwen3-embedding-8b`)
 - `RAG_DATABASE_URL` — optional until the dedicated RAG database exists; apply `llm-gateway/alembic/versions/20260507_02_rag_schema.sql` there (see `llm-gateway/README.md`)
 
-`THIRDPARTY_LITELLM_*`, `SCW_*`, `GPU_*`, `OLLAMA_URL`, and LiteLLM’s own DB URLs are **only** in `llm-gateway/.env`.
+`THIRDPARTY_LITELLM_*`, `SCALEWAY_GENAI_*`, `SCW_*`, and LiteLLM’s own DB URLs are **only** in `llm-gateway/.env`.
 
 Legacy `laed/litellm-config.yaml` is deprecated — use `llm-gateway` only.
 

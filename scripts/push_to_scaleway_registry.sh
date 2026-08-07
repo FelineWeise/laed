@@ -48,18 +48,27 @@ print_deploy_commands() {
 
 LiteLLM gateway lives in sibling repo llm-gateway (${DATA_DIR%/laed}/llm-gateway or /opt/llm-gateway). See laed/SHARED_LITELLM.md.
 
-2) Pin backend image on server — add or edit in ${DATA_DIR}/.env (optional; compose defaults to registry :latest):
+2) Pin backend image on server — add or edit in ${DATA_DIR}/.env:
 
   ${DEPLOY_IMAGE_ENV_VAR}=${FULL_IMAGE}
   Recommended immutable pin:
   ${DEPLOY_IMAGE_ENV_VAR}=${IMAGE_DIGEST}
+
+  ssh ${remote} "grep -E '^${DEPLOY_IMAGE_ENV_VAR}=' ${DATA_DIR}/.env || echo 'MISSING — add to .env'"
+
+  Also set Scaleway model ids if not already:
+  LLM_MODEL=scaleway/qwen3.6-35b
+  EMBEDDING_MODEL=scaleway/qwen3-embedding-8b
+  EMBEDDING_DIM=4096
 
 3) On laed-base:
 
   ssh ${remote} 'cd ${DATA_DIR} && \\
     docker compose pull ${DEPLOY_COMPOSE_SERVICES} && \\
     docker compose up -d --force-recreate ${DEPLOY_COMPOSE_SERVICES} && \\
-    docker compose exec -T app alembic upgrade head'
+    docker compose exec -T app alembic upgrade head && \\
+    docker compose exec -T app python /app/scripts/backfill_rag_projects.py && \\
+    docker compose exec -T app python /app/scripts/backfill_reembed_files.py'
 
 4) Verify: ./scripts/verify-litellm-gateway.sh (on server or Mac with compose up)
 

@@ -51,7 +51,7 @@ export function ProjectGrid({
           No projects yet. Create one to open a project canvas and start
           collaborating.
         </p>
-        <button type="button" onClick={onAddNew} className="laed-btn-primary mt-8">
+        <button type="button" onClick={onAddNew} className="laed-btn-private mt-8">
           Add new project
         </button>
       </div>
@@ -66,7 +66,7 @@ export function ProjectGrid({
         <button
           type="button"
           onClick={onAddNew}
-          className="laed-label cursor-pointer border-none bg-transparent p-0 text-[var(--laed-navy)]"
+          className="laed-label cursor-pointer border-none bg-transparent p-0 text-[var(--laed-private-accent)]"
         >
           + New
         </button>

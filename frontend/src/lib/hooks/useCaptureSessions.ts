@@ -30,15 +30,22 @@ export function useCaptureSessions(kind: "spoken" | "camera", enabled: boolean) 
     }
   }, [listPath]);
 
-  const createNew = useCallback(async () => {
-    const created = await apiFetch<CaptureSession>("/api/capture/sessions", {
-      method: "POST",
-      body: JSON.stringify({ kind, is_private: true }),
-    });
-    setSessions((prev) => [created, ...prev]);
-    setSelectedId(created.id);
-    return created;
-  }, [kind]);
+  const createNew = useCallback(
+    async (opts?: { capture_mode?: CaptureSessionPatch["capture_mode"] }) => {
+      const created = await apiFetch<CaptureSession>("/api/capture/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          kind,
+          is_private: true,
+          ...(opts?.capture_mode ? { capture_mode: opts.capture_mode } : {}),
+        }),
+      });
+      setSessions((prev) => [created, ...prev]);
+      setSelectedId(created.id);
+      return created;
+    },
+    [kind],
+  );
 
   const remove = useCallback(
     async (sessionId: string) => {
@@ -71,11 +78,9 @@ export function useCaptureSessions(kind: "spoken" | "camera", enabled: boolean) 
   useEffect(() => {
     if (!enabled) return;
     void refresh().then((list) => {
-      if (list.length > 0 && selectedId === "") {
-        setSelectedId(list[0]?.id ?? "");
-      }
+      setSelectedId((cur) => (cur !== "" ? cur : list[0]?.id ?? ""));
     });
-  }, [enabled, refresh, selectedId]);
+  }, [enabled, refresh]);
 
   const selected =
     sessions.find((s) => s.id === selectedId) ?? null;

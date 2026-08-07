@@ -1,5 +1,10 @@
 import { MarkdownContent } from "@/components/MarkdownContent";
-import { meBubblePalette, paletteForOtherUser } from "@/lib/bubbleStyles";
+import {
+  meBubblePalette,
+  paletteForOtherUser,
+  privateAiBubblePalette,
+  privateMeBubblePalette,
+} from "@/lib/bubbleStyles";
 
 type Props = {
   kind: "me" | "them" | "ai" | "anonymous";
@@ -7,6 +12,7 @@ type Props = {
   userId?: string | null;
   time?: string;
   markdown?: boolean;
+  privateSpace?: boolean;
   replyPreview?: { content: string; sender_label: string } | null;
   onReply?: () => void;
   children: React.ReactNode;
@@ -37,6 +43,7 @@ export function ChatBubble({
   userId,
   time,
   markdown = false,
+  privateSpace = false,
   replyPreview = null,
   onReply,
   children,
@@ -49,19 +56,36 @@ export function ChatBubble({
     );
 
   if (kind === "ai") {
+    const aiPalette = privateSpace ? privateAiBubblePalette : null;
     return (
       <div className="mb-3 flex">
         <div className="max-w-[88%]">
           <div
-            className="border border-[var(--laed-border)] bg-[var(--laed-bubble-them-0-bg)] px-3 py-2 text-[10px] leading-snug text-[var(--laed-ink)]"
-            style={{ borderRadius: "var(--laed-radius-sm)" }}
+            className="px-[13px] py-2.5 text-[11px] leading-snug text-[var(--laed-ink)]"
+            style={{
+              borderRadius: 16,
+              background: aiPalette?.background ?? "var(--laed-bubble-ai-bg)",
+              color: aiPalette?.color,
+              border: aiPalette?.border ?? "none",
+            }}
           >
-            <span className="laed-label mb-1 block text-[var(--laed-muted)]">LAED</span>
+            <span
+              className="mb-1 block text-[9px] font-semibold tracking-[0.5px]"
+              style={{
+                color: privateSpace
+                  ? "var(--laed-muted)"
+                  : "var(--laed-green)",
+              }}
+            >
+              {privateSpace ? "LAED" : "AI"}
+            </span>
             {replyPreview ? <ReplyQuote preview={replyPreview} /> : null}
             {body}
           </div>
           {time ? (
-            <div className="mt-1 text-[8px] text-[var(--laed-muted)]">{time}</div>
+            <div className="mt-1 px-0.5 text-[9px] text-[rgba(26,25,23,0.3)]">
+              {time}
+            </div>
           ) : null}
         </div>
       </div>
@@ -71,12 +95,20 @@ export function ChatBubble({
   const me = kind === "me";
   const anonymous = kind === "anonymous";
   const palette = me
-    ? meBubblePalette
-    : paletteForOtherUser(anonymous ? null : (userId ?? null));
+    ? privateSpace
+      ? privateMeBubblePalette
+      : meBubblePalette
+    : anonymous || privateSpace
+      ? paletteForOtherUser(anonymous ? null : (userId ?? null))
+      : {
+          background: "#fff",
+          color: "var(--laed-ink)",
+          border: "none",
+        };
 
   return (
     <div className={`mb-3 flex gap-1.5 ${me ? "flex-row-reverse" : "flex-row"}`}>
-      {!me && !anonymous ? (
+      {!me && !anonymous && privateSpace ? (
         <span
           className="mt-5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8px] font-medium"
           style={{
@@ -89,16 +121,28 @@ export function ChatBubble({
           {senderInitial(sender)}
         </span>
       ) : null}
-      <div className="max-w-[78%]">
-        {sender && !me ? <div className="laed-label mb-1">{sender}</div> : null}
-        {anonymous ? <div className="laed-label mb-1">Anonymous</div> : null}
+      <div className="max-w-[80%]">
+        {sender && !me ? (
+          <div className="mb-1 px-0.5 text-[10.5px] font-medium text-[var(--laed-muted)]">
+            {sender}
+          </div>
+        ) : null}
+        {anonymous ? (
+          <div className="mb-1 px-0.5 text-[10.5px] font-medium text-[var(--laed-muted)]">
+            Anonymous
+          </div>
+        ) : null}
         <div
-          className="px-3 py-2 text-[11px] leading-snug"
+          className="px-3.5 py-2.5 text-[12px] leading-snug"
           style={{
-            borderRadius: "var(--laed-radius-sm)",
+            borderRadius: 16,
             background: palette.background,
             color: palette.color,
             border: palette.border,
+            boxShadow:
+              me || privateSpace
+                ? "none"
+                : "0 1px 2px rgba(26,25,23,0.05), 0 4px 14px rgba(26,25,23,0.05)",
           }}
         >
           {replyPreview ? <ReplyQuote preview={replyPreview} /> : null}

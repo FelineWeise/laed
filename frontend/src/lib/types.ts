@@ -36,6 +36,7 @@ export type Project = {
   ownership_model: string;
   created_by: string;
   tags?: string[];
+  archived_at?: string | null;
 };
 
 export type MentionSnapshot = {
@@ -121,15 +122,31 @@ export type CaptureSession = {
   ended_at: string | null;
 };
 
+export type CaptureAsset = {
+  id: string;
+  session_id: string;
+  file_id: string | null;
+  filename: string | null;
+  content_type: string | null;
+  asset_kind: "image" | "video" | "audio" | "transcript";
+  download_url: string | null;
+  transcoded: boolean;
+  project_id: string | null;
+  is_private: boolean;
+  created_at: string;
+};
+
 export type ProjectFile = {
   id: string;
   project_id: string;
+  folder_id?: string;
   filename: string;
   file_type: string | null;
   file_size_bytes: number | null;
   minio_key: string;
   ingestion_status: string;
   is_private?: boolean;
+  shared_with_user_ids?: string[];
   metadata: Record<string, string | null>;
   created_at: string;
 };
@@ -168,7 +185,15 @@ export type Conversation = {
   is_private: boolean;
   title?: string | null;
   topic_node_id?: string | null;
+  linked_thread_session_id?: string | null;
   created_at: string;
+};
+
+export type ConversationPatch = {
+  title?: string;
+  topic_node_id?: string | null;
+  is_private?: boolean;
+  project_id?: string | null;
 };
 
 export type UserSearchResult = {

@@ -53,7 +53,6 @@ print_deploy_commands() {
 
   cd ${REPO_ROOT}
   scp docker-compose.yml Caddyfile "caddy/admin-basicauth.caddy" "${remote}:${DATA_DIR}/"
-  # Optional: scp .env only when you intend to update server secrets (SYNC_ENV=1 pattern)
 
 2) Pin frontend image on server — add or edit in ${DATA_DIR}/.env:
 

@@ -33,5 +33,5 @@ class FileChunk(BaseMixin, Base):
     project_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("projects.id"), nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding = mapped_column(Vector(768), nullable=True)
+    embedding = mapped_column(Vector(4096), nullable=True)
     token_count: Mapped[int | None] = mapped_column(Integer)

@@ -17,21 +17,32 @@ async def run_agent_loop(
     messages: list[dict[str, str]],
     *,
     model: str,
-) -> list[dict[str, str]]:
-    """Optional tool rounds, then return messages ready for final stream."""
+) -> tuple[list[dict[str, str]], str | None]:
+    """Optional tool rounds before the final user-visible reply.
+
+    Used by every streaming AI entry point:
+    - project thread chat (`thread_ai.stream_thread_ai_reply` / `chat.ai-stream`)
+    - project LAED panel (`routes/ai.py`)
+    - workspace LAED (`routes/workspace_ai.py`)
+
+    Returns ``(messages_for_stream, direct_reply)``. When ``direct_reply`` is set,
+    the model already produced the answer (with or without tools) and callers should
+    persist that text instead of running a second streaming completion — otherwise
+    the stream only generates a short follow-up and the real answer is lost.
+    """
     if not settings.search_enabled:
-        return messages
+        return messages, None
 
     tools = openai_tools_payload()
     if not tools:
-        return messages
+        return messages, None
 
     working = list(messages)
     try:
         return await _run_tool_rounds(working, model=model, tools=tools)
     except Exception:
         logger.exception("agent_loop failed; continuing without tool context")
-        return messages
+        return messages, None
 
 
 async def _run_tool_rounds(
@@ -39,13 +50,14 @@ async def _run_tool_rounds(
     *,
     model: str,
     tools: list[dict[str, Any]],
-) -> list[dict[str, str]]:
+) -> tuple[list[dict[str, str]], str | None]:
     for _ in range(MAX_TOOL_ROUNDS):
         response = await gateway.chat_with_tools(working, model=model, tools=tools)
         if not response.get("tool_calls"):
-            if response.get("content"):
-                working.append({"role": "assistant", "content": str(response["content"])})
-            return working
+            content = response.get("content")
+            if isinstance(content, str) and content.strip():
+                return working, content.strip()
+            return working, None
 
         working.append(
             {
@@ -71,4 +83,19 @@ async def _run_tool_rounds(
                     "content": result,
                 }
             )
-    return working
+    return _strip_tool_only_tail(working), None
+
+
+def _strip_tool_only_tail(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop trailing assistant rows that only carry tool_calls (not valid for stream)."""
+    trimmed = list(messages)
+    while trimmed:
+        last = trimmed[-1]
+        if last.get("role") != "assistant":
+            break
+        content = last.get("content")
+        has_text = isinstance(content, str) and content.strip()
+        if has_text or not last.get("tool_calls"):
+            break
+        trimmed.pop()
+    return trimmed

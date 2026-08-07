@@ -14,6 +14,8 @@ type Props = {
   onNodeDragEnd?: (nodeId: string, position: Position) => void;
   allowProjectDrag?: boolean;
   fillHeight?: boolean;
+  /** Private overview = green badges; project canvas = navy */
+  accent?: "private" | "project";
   positionOverrides?: Record<string, Position>;
   badgesByNodeId?: Record<string, NodeBadge[]>;
   gridId?: string;
@@ -34,10 +36,15 @@ export function TopologyCanvas({
   onNodeDragEnd,
   allowProjectDrag = false,
   fillHeight = false,
+  accent = "project",
   positionOverrides,
   badgesByNodeId,
   gridId = "topology-grid",
 }: Props) {
+  const badgeFill =
+    accent === "private"
+      ? "var(--laed-private-accent)"
+      : "var(--laed-navy)";
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewCenter, setViewCenter] = useState<Position>({ x: 400, y: 300 });
   const dragRef = useRef<{
@@ -188,7 +195,7 @@ export function TopologyCanvas({
                   cx={cx + r * 0.5}
                   cy={cy - r * 0.5}
                   r={4.5}
-                  fill="var(--laed-navy)"
+                  fill={badgeFill}
                 />
               ) : null}
               {(badgesByNodeId?.[node.id] ?? []).slice(0, 4).map((badge, bi) => {
@@ -209,7 +216,7 @@ export function TopologyCanvas({
                       cx={bx}
                       cy={by}
                       r={br}
-                      fill="var(--laed-navy)"
+                      fill={badgeFill}
                       stroke="white"
                       strokeWidth={1}
                     />

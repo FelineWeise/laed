@@ -1,37 +1,113 @@
 :root {
-  --laed-paper: #f2f0ec;
-  --laed-paper-elevated: #f8f6f2;
+  /* ---------- NEUTRALS (warm grayscale) ---------- */
   --laed-ink: #1a1917;
+  --laed-ink-2: #3a3733;
+  --laed-paper: #f2f0ec;
+  --laed-paper-warm: #f8f6f2;
+  --laed-paper-elevated: #f8f6f2;
+  --laed-white: #ffffff;
+  --laed-border: #c8c5c0;
+  --laed-border-soft: rgba(26, 25, 23, 0.1);
+  --laed-grid: rgba(26, 25, 23, 0.06);
   --laed-muted: #8a8780;
+  --laed-fill-04: rgba(26, 25, 23, 0.04);
+  --laed-fill-06: rgba(26, 25, 23, 0.06);
+  --laed-fill-08: rgba(26, 25, 23, 0.08);
+
+  /* ---------- ACCENTS ---------- */
   --laed-navy: #1d3a57;
+  --laed-navy-deep: #142a40;
+  --laed-navy-tint: rgba(29, 58, 87, 0.07);
+  --laed-navy-line: rgba(29, 58, 87, 0.25);
   --laed-green: #2d6a4f;
+  --laed-green-deep: #1f4e3a;
+  --laed-green-tint: rgba(45, 106, 79, 0.08);
+  --laed-green-line: rgba(45, 106, 79, 0.28);
+  --laed-warn: #b0483a;
+
+  /* ---------- PRIVATE / SECURITY ---------- */
   --laed-private: #1b4332;
-  --laed-private-bg: rgba(27, 67, 50, 0.08);
-  --laed-private-border: rgba(27, 67, 50, 0.35);
-  --laed-border: rgba(26, 25, 23, 0.12);
+  --laed-private-light: #2d6a4f;
+  --laed-private-paper: #e8f0eb;
+  --laed-private-paper-elevated: #f0f6f2;
+  --laed-private-bg: rgba(27, 67, 50, 0.1);
+  --laed-private-border: rgba(27, 67, 50, 0.4);
+  --laed-private-accent: #1b4332;
+
+  /* ---------- SEMANTIC ---------- */
+  --laed-bg: var(--laed-paper);
+  --laed-surface: var(--laed-white);
+  --laed-text: var(--laed-ink);
+  --laed-text-muted: var(--laed-muted);
+  --laed-divider: var(--laed-border);
+  --laed-action: var(--laed-navy);
+  --laed-action-fg: var(--laed-white);
+  --laed-status-on: var(--laed-green);
+  --laed-alert: var(--laed-navy);
+
+  --laed-viewport-pad-x: max(0.75rem, env(safe-area-inset-left, 0px));
+  --laed-viewport-pad-y: max(0.5rem, env(safe-area-inset-top, 0px));
   --laed-border-strong: rgba(26, 25, 23, 0.18);
 
-  --laed-font-sans: "Helvetica Neue", Arial, system-ui, sans-serif;
+  /* ---------- TYPE ---------- */
+  --laed-font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --laed-font-mono: "SF Mono", "SFMono-Regular", ui-monospace, Menlo, monospace;
+  --laed-size-micro: 7px;
   --laed-size-label: 9px;
-  --laed-track-label: 1.5px;
+  --laed-size-meta: 10px;
   --laed-size-body: 11px;
+  --laed-size-read: 12px;
+  --laed-size-amount: 24px;
+  --laed-track-tight: -0.3px;
+  --laed-track-label: 1.5px;
+  --laed-track-wide: 2px;
+  --laed-weight-reg: 400;
+  --laed-weight-med: 500;
+  --laed-weight-semi: 600;
+  --laed-weight-bold: 700;
   --laed-size-input: 10px;
   --laed-size-placeholder: 10px;
   --laed-size-caption: 8px;
+  --laed-size-nav: 10px;
   --laed-input-height: 40px;
   --laed-input-padding-x: 14px;
-  --laed-input-radius-pill: 20px;
+  --laed-input-radius-pill: 19px;
+
+  /* ---------- RADII / SPACING / ELEVATION ---------- */
+  --laed-radius-hair: 1px;
   --laed-radius-sm: 2px;
-  --laed-radius-phone: 44px;
+  --laed-radius-md: 12px;
+  --laed-radius-pill: 10px;
+  --laed-radius-card: 16px;
+  --laed-radius-phone: 48px;
+  --laed-radius-round: 50%;
+  --laed-space-1: 4px;
+  --laed-space-2: 8px;
+  --laed-space-3: 12px;
+  --laed-space-4: 16px;
+  --laed-space-5: 20px;
+  --laed-space-6: 24px;
+  --laed-shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --laed-shadow-fab: 0 6px 18px rgba(29, 58, 87, 0.35);
+  --laed-shadow-fab-private: 0 4px 20px rgba(27, 67, 50, 0.35);
+  --laed-shadow-card: 0 1px 2px rgba(26, 25, 23, 0.05),
+    0 4px 14px rgba(26, 25, 23, 0.05);
+  --laed-halo-navy: 0 0 0 8px rgba(29, 58, 87, 0.12);
+  --laed-halo-soft: 0 0 0 12px rgba(26, 25, 23, 0.07),
+    0 0 0 26px rgba(26, 25, 23, 0.03);
+  --laed-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --laed-dur-fast: 0.15s;
+  --laed-dur-base: 0.25s;
+  --laed-chrome-private: rgba(27, 67, 50, 0.12);
+  --laed-chrome-project: rgba(29, 58, 87, 0.12);
+  /* Fixed BottomBar height — keep in sync with BottomBar.tsx */
+  --laed-bottom-bar-height: 92px;
+  --laed-bottom-bar-offset: var(--laed-bottom-bar-height);
+  --laed-bubble-private-ai-bg: var(--laed-paper-elevated);
 
-  --laed-shadow-fab: 0 4px 16px rgba(29, 58, 87, 0.25);
-  --laed-shadow-pop: 0 8px 24px rgba(26, 25, 23, 0.12);
-  --laed-bottom-bar-offset: calc(72px + env(safe-area-inset-bottom, 0px));
-
-  --laed-size-nav: 10px;
   --laed-bubble-me-bg: var(--laed-navy);
   --laed-bubble-me-fg: #ffffff;
-  --laed-bubble-them-0-bg: #e8e4dc;
+  --laed-bubble-them-0-bg: #ffffff;
   --laed-bubble-them-0-fg: var(--laed-ink);
   --laed-bubble-them-1-bg: rgba(29, 58, 87, 0.12);
   --laed-bubble-them-1-fg: var(--laed-navy);
@@ -41,9 +117,9 @@
   --laed-bubble-them-3-fg: var(--laed-ink);
   --laed-bubble-anon-bg: rgba(138, 135, 128, 0.2);
   --laed-bubble-anon-fg: var(--laed-ink);
+  --laed-bubble-ai-bg: #efebe3;
 
-  /* Legacy aliases for gradual migration */
-  --laed-bg: var(--laed-paper);
+  /* Legacy aliases */
   --laed-bg-elevated: var(--laed-paper-elevated);
   --laed-fg: var(--laed-ink);
   --laed-fg-muted: var(--laed-muted);

@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import type { Conversation } from "@/lib/types";
+import type { Conversation, ConversationPatch } from "@/lib/types";
 
 type Options = {
   projectId?: string;
   enabled: boolean;
+  linkedThreadSessionId?: string | null;
+  topicNodeId?: string | null;
 };
 
 export function conversationLabel(conv: Conversation): string {
@@ -17,7 +19,12 @@ export function conversationLabel(conv: Conversation): string {
   return `Chat · ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
 }
 
-export function useAiConversations({ projectId, enabled }: Options) {
+export function useAiConversations({
+  projectId,
+  enabled,
+  linkedThreadSessionId = null,
+  topicNodeId = null,
+}: Options) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,21 +54,29 @@ export function useAiConversations({ projectId, enabled }: Options) {
       if (list.length === 0) {
         const created = await apiFetch<Conversation>(createPath, {
           method: "POST",
-          body: JSON.stringify({ is_private: true }),
+          body: JSON.stringify({
+            is_private: true,
+            linked_thread_session_id: linkedThreadSessionId,
+            topic_node_id: topicNodeId,
+          }),
         });
         setConversations([created]);
         setSelectedId(created.id);
         return created.id;
       }
-      const latest = list[0];
-      if (latest !== undefined) {
+      const linked =
+        linkedThreadSessionId !== null && linkedThreadSessionId !== ""
+          ? list.find((c) => c.linked_thread_session_id === linkedThreadSessionId)
+          : undefined;
+      const pick = linked ?? list[0];
+      if (pick !== undefined) {
         setSelectedId((current) =>
-          current !== "" && list.some((c) => c.id === current) ? current : latest.id,
+          current !== "" && list.some((c) => c.id === current) ? current : pick.id,
         );
       }
-      return list[0]?.id ?? "";
+      return pick?.id ?? "";
     },
-    [createPath],
+    [createPath, linkedThreadSessionId, topicNodeId],
   );
 
   useEffect(() => {
@@ -72,12 +87,16 @@ export function useAiConversations({ projectId, enabled }: Options) {
   const createNew = useCallback(async () => {
     const created = await apiFetch<Conversation>(createPath, {
       method: "POST",
-      body: JSON.stringify({ is_private: true }),
+      body: JSON.stringify({
+        is_private: true,
+        linked_thread_session_id: linkedThreadSessionId,
+        topic_node_id: topicNodeId,
+      }),
     });
     setConversations((prev) => [created, ...prev]);
     setSelectedId(created.id);
     return created.id;
-  }, [createPath]);
+  }, [createPath, linkedThreadSessionId, topicNodeId]);
 
   const remove = useCallback(
     async (convId: string) => {
@@ -98,12 +117,35 @@ export function useAiConversations({ projectId, enabled }: Options) {
     [projectId, selectedId],
   );
 
+  const updateConversation = useCallback(
+    async (convId: string, patch: ConversationPatch) => {
+      const patchPath =
+        projectId !== undefined
+          ? `/api/projects/${projectId}/ai/conversations/${convId}`
+          : `/api/ai/conversations/${convId}`;
+      const updated = await apiFetch<Conversation>(patchPath, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      });
+      setConversations((prev) =>
+        prev.map((c) => (c.id === convId ? updated : c)),
+      );
+      return updated;
+    },
+    [projectId],
+  );
+
+  const selected =
+    conversations.find((c) => c.id === selectedId) ?? null;
+
   return {
     conversations,
     selectedId,
     setSelectedId,
+    selected,
     createNew,
     remove,
+    updateConversation,
     loading,
     refresh,
     conversationLabel,

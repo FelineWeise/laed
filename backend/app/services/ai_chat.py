@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import AsyncIterator
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 from app.models.ai import AIMessage
@@ -12,12 +15,42 @@ from app.schemas.ai import MessageCreate
 from app.services.harness import build_system_prompt
 from app.services.llm import llm_stream
 from app.services.llm_messages import flatten_messages_for_stream
-from app.services.rag import build_source_chunks, get_rag
+from app.services.embedding_errors import OssEmbeddingUnavailable, is_oss_embedding_failure
+from app.services.rag import build_source_chunks, get_rag, rag_is_configured
 from app.services.retrieval.resolve import resolve_retrieval_scope
+
+
+async def iter_assistant_tokens(
+    messages: list[dict[str, str]],
+    *,
+    model: str,
+    direct_reply: str | None = None,
+) -> AsyncIterator[str]:
+    """Yield the user-visible assistant text, honoring agent-loop direct replies."""
+    if direct_reply:
+        yield direct_reply
+        return
+
+    stream_messages = flatten_messages_for_stream(messages)
+    if not stream_messages:
+        msg = "Could not prepare model context"
+        raise ValueError(msg)
+
+    async for token in llm_stream(stream_messages, model=model):
+        yield token
 
 
 def resolve_model(body: MessageCreate) -> str:
     return body.model or settings.llm_model
+
+
+def resolve_embedding_model(body: MessageCreate) -> str:
+    override = (body.embedding_model or "").strip()
+    return override if override else settings.embedding_model
+
+
+def uses_thirdparty_embedding(body: MessageCreate) -> bool:
+    return resolve_embedding_model(body).startswith("thirdparty/")
 
 
 def format_excerpts(hits: list[dict[str, object]]) -> str:
@@ -67,13 +100,26 @@ async def build_project_system(
     resolved_scope = scope
     if resolved_scope is None:
         resolved_scope = await resolve_retrieval_scope(project_id, body, db, user_id=user_id)
-    retriever = get_rag(project_id)
-    hits = await retriever.query(
-        user_content,
-        scope=resolved_scope,
-        top_k=5,
-        viewer_user_id=str(user_id),
-    )
+    hits: list[dict[str, object]] = []
+    if rag_is_configured():
+        try:
+            retriever = get_rag(
+                project_id,
+                embedding_model=resolve_embedding_model(body),
+            )
+            hits = await retriever.query(
+                user_content,
+                scope=resolved_scope,
+                top_k=5,
+                viewer_user_id=str(user_id),
+            )
+        except Exception as exc:
+            if is_oss_embedding_failure(exc) and not uses_thirdparty_embedding(body):
+                raise OssEmbeddingUnavailable(str(exc)) from exc
+            logger.exception(
+                "RAG retrieval failed (embeddings or DB); continuing without excerpts"
+            )
+            hits = []
     excerpts = format_excerpts(hits)
     rag_block = (
         f"{RAG_INSTRUCTION}Excerpts:\n{excerpts if excerpts else '(none)'}"
@@ -91,6 +137,7 @@ def stream_assistant_reply(
     conv_id: UUID,
     messages: list[dict[str, str]],
     model: str,
+    direct_reply: str | None = None,
     source_hits: list[dict[str, object]] | None = None,
     index_project_id: UUID | None = None,
     index_user_text: str | None = None,
@@ -102,11 +149,16 @@ def stream_assistant_reply(
     async def event_stream() -> AsyncIterator[str]:
         full_parts: list[str] = []
         try:
-            stream_messages = flatten_messages_for_stream(messages)
-            async for token in llm_stream(stream_messages, model=model, max_tokens=None):
+            async for token in iter_assistant_tokens(
+                messages, model=model, direct_reply=direct_reply
+            ):
                 full_parts.append(token)
                 payload = json.dumps({"content": token})
                 yield f"event: token\ndata: {payload}\n\n"
+        except ValueError as exc:
+            err = json.dumps({"error": str(exc)})
+            yield f"event: error\ndata: {err}\n\n"
+            return
         except Exception as exc:
             err = json.dumps({"error": str(exc)})
             yield f"event: error\ndata: {err}\n\n"
@@ -142,6 +194,7 @@ def stream_assistant_reply(
             {
                 "message_id": str(assistant.id),
                 "source_chunks": source_chunks,
+                "content": assistant_text,
             }
         )
         yield f"event: done\ndata: {done_payload}\n\n"
