@@ -24,8 +24,8 @@ export function MicButton({
       : "var(--laed-navy)";
   const halo =
     accent === "private"
-      ? "0 0 0 5px rgba(27,67,50,0.14)"
-      : "0 0 0 5px rgba(29,58,87,0.14)";
+      ? "0 0 0 5px var(--laed-private-tint-strong)"
+      : "0 0 0 5px var(--laed-navy-tint-strong)";
 
   return (
     <button
@@ -39,7 +39,7 @@ export function MicButton({
         width: size,
         height: size,
         borderRadius: "50%",
-        background: listening ? activeBg : "rgba(26,25,23,0.05)",
+        background: listening ? activeBg : "var(--laed-fill-06)",
         color: listening ? "#fff" : "var(--laed-muted)",
         boxShadow: listening ? halo : "none",
         cursor: "pointer",

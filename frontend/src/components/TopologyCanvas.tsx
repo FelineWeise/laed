@@ -172,8 +172,8 @@ export function TopologyCanvas({
                 fill="none"
                 stroke={
                   accentGreen
-                    ? "rgba(45,106,79,0.28)"
-                    : "rgba(26,25,23,0.12)"
+                    ? "var(--laed-green-line)"
+                    : "var(--laed-fill-12)"
                 }
                 strokeWidth={1}
                 strokeDasharray={archived ? "3 4" : undefined}
@@ -185,8 +185,8 @@ export function TopologyCanvas({
                   r={r - 8}
                   fill={
                     accentGreen
-                      ? "rgba(45,106,79,0.06)"
-                      : "rgba(26,25,23,0.04)"
+                      ? "var(--laed-green-tint)"
+                      : "var(--laed-fill-04)"
                   }
                 />
               ) : null}

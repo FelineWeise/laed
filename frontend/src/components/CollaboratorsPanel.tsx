@@ -85,26 +85,23 @@ export function CollaboratorsPanel({ projectId, topicNodeId }: Props) {
           <div
             key={m.user_id}
             className="flex items-center gap-3 rounded-2xl bg-white px-[13px] py-[11px]"
-            style={{
-              boxShadow:
-                "0 1px 2px rgba(26,25,23,0.04), 0 6px 16px rgba(26,25,23,0.04)",
-            }}
+            style={{ boxShadow: "var(--laed-shadow-card)" }}
           >
             <span
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--laed-navy)]"
-              style={{ background: "rgba(29,58,87,0.09)" }}
+              style={{ background: "var(--laed-navy-tint)" }}
             >
               <Person size={18} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[13.5px] font-semibold text-[var(--laed-ink)]">
+              <div className="text-[length:var(--laed-size-title)] font-semibold text-[var(--laed-ink)]">
                 {m.display_name ?? "User"}
               </div>
               <div className="mt-0.5 text-[11px] text-[var(--laed-muted)]">
                 Internal · {m.role}
               </div>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--laed-green)]">
+            <span className="inline-flex items-center gap-1.5 text-[length:var(--laed-size-meta)] font-medium text-[var(--laed-green)]">
               <span className="h-[7px] w-[7px] rounded-full bg-[var(--laed-green)]" />
               Online
             </span>

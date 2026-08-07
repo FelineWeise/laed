@@ -83,7 +83,7 @@ export function ChatBubble({
             {body}
           </div>
           {time ? (
-            <div className="mt-1 px-0.5 text-[9px] text-[rgba(26,25,23,0.3)]">
+            <div className="mt-1 px-0.5 text-[9px] text-[var(--laed-text-faint)]">
               {time}
             </div>
           ) : null}
@@ -123,12 +123,12 @@ export function ChatBubble({
       ) : null}
       <div className="max-w-[80%]">
         {sender && !me ? (
-          <div className="mb-1 px-0.5 text-[10.5px] font-medium text-[var(--laed-muted)]">
+          <div className="mb-1 px-0.5 text-[length:var(--laed-size-meta)] font-medium text-[var(--laed-muted)]">
             {sender}
           </div>
         ) : null}
         {anonymous ? (
-          <div className="mb-1 px-0.5 text-[10.5px] font-medium text-[var(--laed-muted)]">
+          <div className="mb-1 px-0.5 text-[length:var(--laed-size-meta)] font-medium text-[var(--laed-muted)]">
             Anonymous
           </div>
         ) : null}
@@ -139,10 +139,7 @@ export function ChatBubble({
             background: palette.background,
             color: palette.color,
             border: palette.border,
-            boxShadow:
-              me || privateSpace
-                ? "none"
-                : "0 1px 2px rgba(26,25,23,0.05), 0 4px 14px rgba(26,25,23,0.05)",
+            boxShadow: me || privateSpace ? "none" : "var(--laed-shadow-card)",
           }}
         >
           {replyPreview ? <ReplyQuote preview={replyPreview} /> : null}

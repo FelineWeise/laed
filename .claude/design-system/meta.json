@@ -1,0 +1,46 @@
+{
+  "name": "LAED",
+  "slug": "laed",
+  "description": "Design system for LAED — an EU-hosted, sovereignty-first secure collaboration PWA. Warm paper/ink base, navy for shared project surfaces, green for private and trust-bearing surfaces.",
+  "generator": {
+    "script": "scripts/export-design-system.mjs",
+    "version": "1.0.0"
+  },
+  "generatedAt": "2026-08-07T14:16:59.229Z",
+  "git": {
+    "remote": "git@github.com:FelineWeise/laed.git",
+    "branch": "LAED-v1.1-refactoring",
+    "commit": "04f38da",
+    "dirty": true
+  },
+  "sources": {
+    "tokens": "frontend/src/styles/tokens.css",
+    "globals": "frontend/src/app/globals.css",
+    "layout": "frontend/src/app/layout.tsx",
+    "manifest": "frontend/public/manifest.json",
+    "packageJson": "frontend/package.json"
+  },
+  "stack": {
+    "framework": "next@^15.5.19",
+    "css": "tailwindcss@^4.1.11 (v4 CSS-first, no tailwind.config)",
+    "tokenTransport": "CSS custom properties consumed as Tailwind arbitrary values, e.g. bg-[var(--laed-paper)]"
+  },
+  "themes": [
+    "light"
+  ],
+  "scopeAccents": {
+    "private": "--laed-private",
+    "project": "--laed-navy"
+  },
+  "principles": [
+    ".cursor/rules/security-sovereignty.mdc",
+    ".cursor/rules/mobile-pwa-ux.mdc",
+    ".cursor/rules/frontend-nextjs.mdc"
+  ],
+  "counts": {
+    "tokens": 117,
+    "cssPrimitives": 44,
+    "components": 42,
+    "driftFindings": 0
+  }
+}

@@ -35,7 +35,7 @@ export function MentionHighlightedText({ content, mentions = [] }: Props) {
           return (
             <span
               key={`${i}-${part}`}
-              className="rounded-sm bg-[rgba(26,54,93,0.12)] px-0.5 font-medium text-[var(--laed-navy)]"
+              className="rounded-sm bg-[var(--laed-navy-tint-strong)] px-0.5 font-medium text-[var(--laed-navy)]"
             >
               @{part}
             </span>

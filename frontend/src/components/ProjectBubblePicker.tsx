@@ -31,7 +31,7 @@ function Bubble({
       className={`cursor-pointer border px-3 py-1.5 text-[8px] tracking-[1px] uppercase transition-colors ${
         active
           ? "border-[var(--laed-private-accent)] bg-[var(--laed-private-bg)] text-[var(--laed-private-accent)]"
-          : "border-[rgba(26,25,23,0.12)] bg-[var(--laed-paper-elevated)] text-[var(--laed-muted)] hover:border-[var(--laed-private-border)]"
+          : "border-[var(--laed-fill-12)] bg-[var(--laed-paper-elevated)] text-[var(--laed-muted)] hover:border-[var(--laed-private-border)]"
       }`}
       style={{ borderRadius: "999px" }}
     >

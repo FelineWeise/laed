@@ -13,11 +13,13 @@
   --laed-fill-04: rgba(26, 25, 23, 0.04);
   --laed-fill-06: rgba(26, 25, 23, 0.06);
   --laed-fill-08: rgba(26, 25, 23, 0.08);
+  --laed-fill-12: rgba(26, 25, 23, 0.12);
 
   /* ---------- ACCENTS ---------- */
   --laed-navy: #1d3a57;
   --laed-navy-deep: #142a40;
   --laed-navy-tint: rgba(29, 58, 87, 0.07);
+  --laed-navy-tint-strong: rgba(29, 58, 87, 0.12);
   --laed-navy-line: rgba(29, 58, 87, 0.25);
   --laed-green: #2d6a4f;
   --laed-green-deep: #1f4e3a;
@@ -31,6 +33,8 @@
   --laed-private-paper: #e8f0eb;
   --laed-private-paper-elevated: #f0f6f2;
   --laed-private-bg: rgba(27, 67, 50, 0.1);
+  --laed-private-tint: rgba(27, 67, 50, 0.08);
+  --laed-private-tint-strong: rgba(27, 67, 50, 0.12);
   --laed-private-border: rgba(27, 67, 50, 0.4);
   --laed-private-accent: #1b4332;
 
@@ -39,6 +43,8 @@
   --laed-surface: var(--laed-white);
   --laed-text: var(--laed-ink);
   --laed-text-muted: var(--laed-muted);
+  --laed-text-faint: rgba(26, 25, 23, 0.3);
+  --laed-scrim: rgba(26, 25, 23, 0.55);
   --laed-divider: var(--laed-border);
   --laed-action: var(--laed-navy);
   --laed-action-fg: var(--laed-white);
@@ -57,6 +63,7 @@
   --laed-size-meta: 10px;
   --laed-size-body: 11px;
   --laed-size-read: 12px;
+  --laed-size-title: 13px;
   --laed-size-amount: 24px;
   --laed-track-tight: -0.3px;
   --laed-track-label: 1.5px;
@@ -92,14 +99,15 @@
   --laed-shadow-fab-private: 0 4px 20px rgba(27, 67, 50, 0.35);
   --laed-shadow-card: 0 1px 2px rgba(26, 25, 23, 0.05),
     0 4px 14px rgba(26, 25, 23, 0.05);
-  --laed-halo-navy: 0 0 0 8px rgba(29, 58, 87, 0.12);
+  --laed-shadow-sheet: 0 12px 40px rgba(26, 25, 23, 0.22);
+  --laed-halo-navy: 0 0 0 8px var(--laed-navy-tint-strong);
   --laed-halo-soft: 0 0 0 12px rgba(26, 25, 23, 0.07),
     0 0 0 26px rgba(26, 25, 23, 0.03);
   --laed-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --laed-dur-fast: 0.15s;
   --laed-dur-base: 0.25s;
-  --laed-chrome-private: rgba(27, 67, 50, 0.12);
-  --laed-chrome-project: rgba(29, 58, 87, 0.12);
+  --laed-chrome-private: var(--laed-private-tint-strong);
+  --laed-chrome-project: var(--laed-navy-tint-strong);
   /* Fixed BottomBar height — keep in sync with BottomBar.tsx */
   --laed-bottom-bar-height: 92px;
   --laed-bottom-bar-offset: var(--laed-bottom-bar-height);

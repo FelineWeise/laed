@@ -19,14 +19,14 @@ export function MessageSources({ chunks }: Props) {
     <div className="mt-1">
       <button
         type="button"
-        className="text-[var(--laed-size-caption)] tracking-[0.5px] text-[var(--laed-muted)] hover:text-[var(--laed-ink)]"
+        className="text-[length:var(--laed-size-caption)] tracking-[0.5px] text-[var(--laed-muted)] hover:text-[var(--laed-ink)]"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
         {open ? "Hide sources" : "Show sources"}
       </button>
       {open ? (
-        <ul className="mt-1 space-y-1 text-[var(--laed-size-caption)] text-[var(--laed-muted)]">
+        <ul className="mt-1 space-y-1 text-[length:var(--laed-size-caption)] text-[var(--laed-muted)]">
           {deduped.map((c, i) => (
             <li key={`${c.document_id ?? c.filename}-${i}`}>
               <span className="font-medium text-[var(--laed-ink)]">{c.filename}</span>

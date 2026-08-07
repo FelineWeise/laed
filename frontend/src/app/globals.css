@@ -245,7 +245,7 @@ body {
   overflow: hidden;
   box-sizing: border-box;
   background: var(--laed-paper);
-  box-shadow: 0 12px 40px rgba(26, 25, 23, 0.22);
+  box-shadow: var(--laed-shadow-sheet);
   border-radius: var(--laed-radius-md);
   max-width: calc(100dvw - 24px);
   transition:

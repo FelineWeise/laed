@@ -152,10 +152,10 @@ export function CaptureAttachSheet({
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div
-          className="pointer-events-auto w-full max-w-[26rem] overflow-hidden rounded-[18px] border border-[rgba(26,25,23,0.1)] bg-white/95 shadow-[0_12px_40px_rgba(26,25,23,0.16)] backdrop-blur-md transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="pointer-events-auto w-full max-w-[26rem] overflow-hidden rounded-[18px] border border-[var(--laed-border-soft)] bg-white/95 shadow-[var(--laed-shadow-sheet)] backdrop-blur-md transition-[height] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ height: expanded ? 300 : 118 }}
         >
-          <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-[rgba(26,25,23,0.12)]" />
+          <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-[var(--laed-fill-12)]" />
           <div className="px-3.5 pt-2 pb-2">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-[10px] font-semibold tracking-[0.9px] text-[var(--laed-muted)] uppercase">

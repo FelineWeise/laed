@@ -94,7 +94,7 @@ export function ShareToProjectButton({
           style={{
             color: linked
               ? "var(--laed-private-accent)"
-              : "rgba(26,25,23,0.35)",
+              : "var(--laed-text-faint)",
             cursor: "pointer",
           }}
         >

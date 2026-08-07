@@ -58,7 +58,7 @@ export function AppShell({
             {breadcrumb.label}
           </button>
         ) : (
-          <div className="flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-[length:var(--laed-size-title)]">
             <button
               type="button"
               onClick={onHome}

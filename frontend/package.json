@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "design:export": "node ../scripts/export-design-system.mjs",
+    "design:check": "node ../scripts/export-design-system.mjs --check"
   },
   "dependencies": {
     "next": "^15.5.19",

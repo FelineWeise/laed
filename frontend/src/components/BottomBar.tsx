@@ -24,16 +24,16 @@ export function BottomBar({
   const isPrivate = variant === "private";
 
   const barBg = isPrivate
-    ? "rgba(27, 67, 50, 0.08)"
-    : "rgba(29, 58, 87, 0.1)";
+    ? "var(--laed-private-tint)"
+    : "var(--laed-navy-tint)";
   const inactiveBg = isPrivate
-    ? "rgba(27, 67, 50, 0.12)"
-    : "rgba(29, 58, 87, 0.12)";
+    ? "var(--laed-private-tint-strong)"
+    : "var(--laed-navy-tint-strong)";
   const agentActiveBg = isPrivate ? "var(--laed-private-accent)" : "var(--laed-navy)";
   const captureActiveBg = isPrivate ? "var(--laed-private-accent)" : "var(--laed-navy)";
   const agentShadow = isPrivate
     ? "var(--laed-shadow-fab-private)"
-    : "0 4px 16px rgba(29, 58, 87, 0.28)";
+    : "var(--laed-shadow-fab)";
 
   return (
     <nav

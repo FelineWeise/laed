@@ -1,0 +1,1087 @@
+{
+  "$description": "Modules that consume LAED design tokens, with per-file token and class usage.",
+  "generatedAt": "2026-08-07T14:16:59.229Z",
+  "cssPrimitives": [
+    {
+      "class": "laed-assistant-backdrop",
+      "source": "frontend/src/app/globals.css",
+      "line": 228,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-body",
+      "source": "frontend/src/app/globals.css",
+      "line": 354,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-floating",
+      "source": "frontend/src/app/globals.css",
+      "line": 238,
+      "tokens": [
+        "--laed-paper",
+        "--laed-shadow-sheet",
+        "--laed-radius-md"
+      ]
+    },
+    {
+      "class": "laed-assistant-floating--dragging",
+      "source": "frontend/src/app/globals.css",
+      "line": 265,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-footer",
+      "source": "frontend/src/app/globals.css",
+      "line": 390,
+      "tokens": [
+        "--laed-viewport-pad-x"
+      ]
+    },
+    {
+      "class": "laed-assistant-header",
+      "source": "frontend/src/app/globals.css",
+      "line": 371,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-header--draggable",
+      "source": "frontend/src/app/globals.css",
+      "line": 380,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-messages",
+      "source": "frontend/src/app/globals.css",
+      "line": 398,
+      "tokens": [
+        "--laed-viewport-pad-x"
+      ]
+    },
+    {
+      "class": "laed-assistant-overlay",
+      "source": "frontend/src/app/globals.css",
+      "line": 221,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle",
+      "source": "frontend/src/app/globals.css",
+      "line": 269,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--e",
+      "source": "frontend/src/app/globals.css",
+      "line": 294,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--n",
+      "source": "frontend/src/app/globals.css",
+      "line": 278,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--ne",
+      "source": "frontend/src/app/globals.css",
+      "line": 310,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--nw",
+      "source": "frontend/src/app/globals.css",
+      "line": 318,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--s",
+      "source": "frontend/src/app/globals.css",
+      "line": 286,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--se",
+      "source": "frontend/src/app/globals.css",
+      "line": 326,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--sw",
+      "source": "frontend/src/app/globals.css",
+      "line": 334,
+      "tokens": []
+    },
+    {
+      "class": "laed-assistant-resize-handle--w",
+      "source": "frontend/src/app/globals.css",
+      "line": 302,
+      "tokens": []
+    },
+    {
+      "class": "laed-btn-primary",
+      "source": "frontend/src/app/globals.css",
+      "line": 85,
+      "tokens": [
+        "--laed-navy",
+        "--laed-size-label",
+        "--laed-track-label"
+      ]
+    },
+    {
+      "class": "laed-btn-private",
+      "source": "frontend/src/app/globals.css",
+      "line": 411,
+      "tokens": [
+        "--laed-private-accent",
+        "--laed-size-label",
+        "--laed-track-label",
+        "--laed-radius-sm",
+        "--laed-private-light"
+      ]
+    },
+    {
+      "class": "laed-control-private",
+      "source": "frontend/src/app/globals.css",
+      "line": 217,
+      "tokens": [
+        "--laed-private-accent"
+      ]
+    },
+    {
+      "class": "laed-fab-private",
+      "source": "frontend/src/app/globals.css",
+      "line": 358,
+      "tokens": [
+        "--laed-private-accent",
+        "--laed-shadow-fab-private",
+        "--laed-private-light"
+      ]
+    },
+    {
+      "class": "laed-input",
+      "source": "frontend/src/app/globals.css",
+      "line": 102,
+      "tokens": [
+        "--laed-border",
+        "--laed-size-body",
+        "--laed-ink",
+        "--laed-navy"
+      ]
+    },
+    {
+      "class": "laed-input-pill",
+      "source": "frontend/src/app/globals.css",
+      "line": 117,
+      "tokens": [
+        "--laed-input-height",
+        "--laed-input-padding-x",
+        "--laed-size-input",
+        "--laed-ink",
+        "--laed-border",
+        "--laed-input-radius-pill",
+        "--laed-size-placeholder",
+        "--laed-muted",
+        "--laed-navy"
+      ]
+    },
+    {
+      "class": "laed-input-pill--private",
+      "source": "frontend/src/app/globals.css",
+      "line": 433,
+      "tokens": [
+        "--laed-private-accent"
+      ]
+    },
+    {
+      "class": "laed-label",
+      "source": "frontend/src/app/globals.css",
+      "line": 12,
+      "tokens": [
+        "--laed-size-label",
+        "--laed-track-label",
+        "--laed-muted"
+      ]
+    },
+    {
+      "class": "laed-markdown",
+      "source": "frontend/src/app/globals.css",
+      "line": 19,
+      "tokens": [
+        "--laed-radius-sm",
+        "--laed-navy",
+        "--laed-border",
+        "--laed-muted"
+      ]
+    },
+    {
+      "class": "laed-nav",
+      "source": "frontend/src/app/globals.css",
+      "line": 139,
+      "tokens": [
+        "--laed-size-nav"
+      ]
+    },
+    {
+      "class": "laed-nav--active",
+      "source": "frontend/src/app/globals.css",
+      "line": 146,
+      "tokens": [
+        "--laed-ink"
+      ]
+    },
+    {
+      "class": "laed-nav--inactive",
+      "source": "frontend/src/app/globals.css",
+      "line": 150,
+      "tokens": [
+        "--laed-muted"
+      ]
+    },
+    {
+      "class": "laed-page-fill",
+      "source": "frontend/src/app/globals.css",
+      "line": 183,
+      "tokens": [
+        "--laed-bottom-bar-offset"
+      ]
+    },
+    {
+      "class": "laed-popup-surface",
+      "source": "frontend/src/app/globals.css",
+      "line": 405,
+      "tokens": [
+        "--laed-paper",
+        "--laed-radius-md",
+        "--laed-shadow-pop"
+      ]
+    },
+    {
+      "class": "laed-room-body",
+      "source": "frontend/src/app/globals.css",
+      "line": 169,
+      "tokens": [
+        "--laed-bottom-bar-offset"
+      ]
+    },
+    {
+      "class": "laed-room-chat-column",
+      "source": "frontend/src/app/globals.css",
+      "line": 165,
+      "tokens": []
+    },
+    {
+      "class": "laed-room-chat-row",
+      "source": "frontend/src/app/globals.css",
+      "line": 161,
+      "tokens": []
+    },
+    {
+      "class": "laed-room-root",
+      "source": "frontend/src/app/globals.css",
+      "line": 154,
+      "tokens": []
+    },
+    {
+      "class": "laed-shell",
+      "source": "frontend/src/app/globals.css",
+      "line": 439,
+      "tokens": []
+    },
+    {
+      "class": "laed-shell--narrow",
+      "source": "frontend/src/app/globals.css",
+      "line": 445,
+      "tokens": []
+    },
+    {
+      "class": "laed-tab-scroll",
+      "source": "frontend/src/app/globals.css",
+      "line": 177,
+      "tokens": []
+    },
+    {
+      "class": "laed-tip",
+      "source": "frontend/src/app/globals.css",
+      "line": 451,
+      "tokens": [
+        "--laed-ink"
+      ]
+    },
+    {
+      "class": "laed-tip--below",
+      "source": "frontend/src/app/globals.css",
+      "line": 503,
+      "tokens": [
+        "--laed-ink"
+      ]
+    },
+    {
+      "class": "laed-viewport-fill",
+      "source": "frontend/src/app/globals.css",
+      "line": 192,
+      "tokens": [
+        "--laed-bottom-bar-offset"
+      ]
+    },
+    {
+      "class": "laed-viewport-fill-column",
+      "source": "frontend/src/app/globals.css",
+      "line": 210,
+      "tokens": []
+    },
+    {
+      "class": "laed-viewport-fill-row",
+      "source": "frontend/src/app/globals.css",
+      "line": 204,
+      "tokens": []
+    }
+  ],
+  "components": [
+    {
+      "name": "AppMenu",
+      "path": "frontend/src/components/AppMenu.tsx",
+      "exports": [
+        "AppMenu"
+      ],
+      "tokens": [
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-paper",
+        "--laed-private-accent"
+      ],
+      "cssClasses": [
+        "laed-label",
+        "laed-nav",
+        "laed-nav--active",
+        "laed-nav--inactive",
+        "laed-popup-surface"
+      ],
+      "drift": []
+    },
+    {
+      "name": "AppShell",
+      "path": "frontend/src/components/AppShell.tsx",
+      "exports": [
+        "AppShell"
+      ],
+      "tokens": [
+        "--laed-chrome-private",
+        "--laed-chrome-project",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-paper",
+        "--laed-size-title"
+      ],
+      "cssClasses": [
+        "laed-label",
+        "laed-shell"
+      ],
+      "drift": []
+    },
+    {
+      "name": "AssistantPanel",
+      "path": "frontend/src/components/AssistantPanel.tsx",
+      "exports": [
+        "AssistantPanel",
+        "AssistantContext"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-muted",
+        "--laed-paper-elevated",
+        "--laed-private-accent"
+      ],
+      "cssClasses": [
+        "laed-assistant-backdrop",
+        "laed-assistant-body",
+        "laed-assistant-floating",
+        "laed-assistant-footer",
+        "laed-assistant-header",
+        "laed-assistant-header--draggable",
+        "laed-assistant-messages",
+        "laed-assistant-overlay",
+        "laed-assistant-resize-handle",
+        "laed-assistant-resize-handle--",
+        "laed-btn-private",
+        "laed-input-pill",
+        "laed-input-pill--private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "AuthGuard",
+      "path": "frontend/src/components/AuthGuard.tsx",
+      "exports": [
+        "AuthGuard"
+      ],
+      "tokens": [
+        "--laed-fg-muted"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "AuthLayout",
+      "path": "frontend/src/components/AuthLayout.tsx",
+      "exports": [
+        "AuthLayout"
+      ],
+      "tokens": [
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-paper"
+      ],
+      "cssClasses": [
+        "laed-label",
+        "laed-shell",
+        "laed-shell--narrow"
+      ],
+      "drift": []
+    },
+    {
+      "name": "BottomBar",
+      "path": "frontend/src/components/BottomBar.tsx",
+      "exports": [
+        "BottomBar"
+      ],
+      "tokens": [
+        "--laed-bottom-bar-height",
+        "--laed-ink",
+        "--laed-navy",
+        "--laed-navy-tint",
+        "--laed-navy-tint-strong",
+        "--laed-private-accent",
+        "--laed-private-tint",
+        "--laed-private-tint-strong",
+        "--laed-shadow-fab",
+        "--laed-shadow-fab-private"
+      ],
+      "cssClasses": [
+        "laed-shell"
+      ],
+      "drift": []
+    },
+    {
+      "name": "CanvasInfoTip",
+      "path": "frontend/src/components/CanvasInfoTip.tsx",
+      "exports": [
+        "CanvasInfoTip"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-muted",
+        "--laed-radius-sm",
+        "--laed-shadow-pop"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "CaptureArtifactsDrawer",
+      "path": "frontend/src/components/CaptureArtifactsDrawer.tsx",
+      "exports": [
+        "CaptureArtifactsDrawer"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-paper-elevated",
+        "--laed-radius-md",
+        "--laed-shadow-pop",
+        "--laed-warn"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "CaptureAssetOpenButton",
+      "path": "frontend/src/components/CaptureAssetOpenButton.tsx",
+      "exports": [
+        "CaptureAssetOpenButton"
+      ],
+      "tokens": [
+        "--laed-muted"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "CaptureAttachSheet",
+      "path": "frontend/src/components/CaptureAttachSheet.tsx",
+      "exports": [
+        "CaptureAttachSheet"
+      ],
+      "tokens": [
+        "--laed-border-soft",
+        "--laed-bottom-bar-offset",
+        "--laed-fill-12",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-private-accent",
+        "--laed-private-bg",
+        "--laed-shadow-sheet"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "CaptureLibraryPanel",
+      "path": "frontend/src/components/CaptureLibraryPanel.tsx",
+      "exports": [
+        "CaptureLibraryPanel",
+        "CaptureModeFolder"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-private-accent",
+        "--laed-private-bg"
+      ],
+      "cssClasses": [
+        "laed-btn-private"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ChatBubble",
+      "path": "frontend/src/components/ChatBubble.tsx",
+      "exports": [
+        "ChatBubble"
+      ],
+      "tokens": [
+        "--laed-bubble-ai-bg",
+        "--laed-green",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-shadow-card",
+        "--laed-size-meta",
+        "--laed-text-faint"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "CollaboratorsPanel",
+      "path": "frontend/src/components/CollaboratorsPanel.tsx",
+      "exports": [
+        "CollaboratorsPanel"
+      ],
+      "tokens": [
+        "--laed-green",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-navy-tint",
+        "--laed-shadow-card",
+        "--laed-size-meta",
+        "--laed-size-title"
+      ],
+      "cssClasses": [
+        "laed-tab-scroll"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ContextPicker",
+      "path": "frontend/src/components/ContextPicker.tsx",
+      "exports": [
+        "ContextPicker"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "GridBg",
+      "path": "frontend/src/components/GridBg.tsx",
+      "exports": [
+        "GridBg"
+      ],
+      "tokens": [],
+      "cssClasses": [
+        "laed-grid"
+      ],
+      "drift": []
+    },
+    {
+      "name": "HomeCanvas",
+      "path": "frontend/src/components/HomeCanvas.tsx",
+      "exports": [
+        "HomeCanvas"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-muted",
+        "--laed-private-accent",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "IncomingInvitations",
+      "path": "frontend/src/components/IncomingInvitations.tsx",
+      "exports": [
+        "IncomingInvitations"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-paper-elevated",
+        "--laed-private-accent"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "LlmModelSelect",
+      "path": "frontend/src/components/LlmModelSelect.tsx",
+      "exports": [
+        "LlmModelSelect"
+      ],
+      "tokens": [
+        "--laed-border"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "MarkdownContent",
+      "path": "frontend/src/components/MarkdownContent.tsx",
+      "exports": [
+        "MarkdownContent"
+      ],
+      "tokens": [],
+      "cssClasses": [
+        "laed-markdown"
+      ],
+      "drift": []
+    },
+    {
+      "name": "MentionAutocomplete",
+      "path": "frontend/src/components/MentionAutocomplete.tsx",
+      "exports": [
+        "MentionAutocomplete"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-paper",
+        "--laed-radius-sm",
+        "--laed-shadow-pop"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "MentionHighlightedText",
+      "path": "frontend/src/components/MentionHighlightedText.tsx",
+      "exports": [
+        "MentionHighlightedText"
+      ],
+      "tokens": [
+        "--laed-navy",
+        "--laed-navy-tint-strong"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "MessageSources",
+      "path": "frontend/src/components/MessageSources.tsx",
+      "exports": [
+        "MessageSources"
+      ],
+      "tokens": [
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-size-caption"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "MicButton",
+      "path": "frontend/src/components/MicButton.tsx",
+      "exports": [
+        "MicButton"
+      ],
+      "tokens": [
+        "--laed-fill-06",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-navy-tint-strong",
+        "--laed-private-accent",
+        "--laed-private-tint-strong"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "PrivateBadge",
+      "path": "frontend/src/components/PrivateBadge.tsx",
+      "exports": [
+        "PrivateBadge"
+      ],
+      "tokens": [
+        "--laed-private",
+        "--laed-private-bg"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "PrivateCaptureShell",
+      "path": "frontend/src/components/PrivateCaptureShell.tsx",
+      "exports": [
+        "PrivateCaptureShell"
+      ],
+      "tokens": [
+        "--laed-viewport-pad-x",
+        "--laed-warn"
+      ],
+      "cssClasses": [
+        "laed-viewport-fill"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ProjectBubblePicker",
+      "path": "frontend/src/components/ProjectBubblePicker.tsx",
+      "exports": [
+        "ProjectBubblePicker"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-fill-12",
+        "--laed-muted",
+        "--laed-paper",
+        "--laed-paper-elevated",
+        "--laed-private-accent",
+        "--laed-private-bg",
+        "--laed-private-border",
+        "--laed-radius-md",
+        "--laed-shadow-pop"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-control-private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ProjectGrid",
+      "path": "frontend/src/components/ProjectGrid.tsx",
+      "exports": [
+        "ProjectGrid"
+      ],
+      "tokens": [
+        "--laed-muted",
+        "--laed-private-accent"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-label",
+        "laed-tab-scroll"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ProjectListCard",
+      "path": "frontend/src/components/ProjectListCard.tsx",
+      "exports": [
+        "ProjectListCard"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-paper-elevated",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-input-pill",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ProjectTopicPicker",
+      "path": "frontend/src/components/ProjectTopicPicker.tsx",
+      "exports": [
+        "ProjectTopicPicker"
+      ],
+      "tokens": [
+        "--laed-border"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "ShareToProjectButton",
+      "path": "frontend/src/components/ShareToProjectButton.tsx",
+      "exports": [
+        "ShareToProjectButton"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-private-accent",
+        "--laed-private-bg",
+        "--laed-shadow-pop",
+        "--laed-text-faint"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "TagChipEditor",
+      "path": "frontend/src/components/TagChipEditor.tsx",
+      "exports": [
+        "TagChipEditor"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted"
+      ],
+      "cssClasses": [
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ThirdpartyEmbeddingPrompt",
+      "path": "frontend/src/components/ThirdpartyEmbeddingPrompt.tsx",
+      "exports": [
+        "ThirdpartyEmbeddingPrompt"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-paper-elevated",
+        "--laed-radius-sm",
+        "--laed-scrim"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "Tip",
+      "path": "frontend/src/components/Tip.tsx",
+      "exports": [
+        "Tip"
+      ],
+      "tokens": [],
+      "cssClasses": [
+        "laed-tip",
+        "laed-tip--below"
+      ],
+      "drift": []
+    },
+    {
+      "name": "TopologyCanvas",
+      "path": "frontend/src/components/TopologyCanvas.tsx",
+      "exports": [
+        "TopologyCanvas",
+        "NodeBadge"
+      ],
+      "tokens": [
+        "--laed-fill-04",
+        "--laed-fill-12",
+        "--laed-green-line",
+        "--laed-green-tint",
+        "--laed-navy",
+        "--laed-private-accent"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "UserSearchCombobox",
+      "path": "frontend/src/components/UserSearchCombobox.tsx",
+      "exports": [
+        "UserSearchCombobox"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [
+        "laed-input-pill"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ConversationDrawer",
+      "path": "frontend/src/components/chat/ConversationDrawer.tsx",
+      "exports": [
+        "ConversationDrawer",
+        "DrawerItem"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-muted",
+        "--laed-navy",
+        "--laed-paper",
+        "--laed-paper-elevated",
+        "--laed-radius-md",
+        "--laed-radius-sm",
+        "--laed-shadow-pop"
+      ],
+      "cssClasses": [
+        "laed-btn-private",
+        "laed-label"
+      ],
+      "drift": []
+    },
+    {
+      "name": "ConversationListItem",
+      "path": "frontend/src/components/chat/ConversationListItem.tsx",
+      "exports": [
+        "ConversationListItem"
+      ],
+      "tokens": [
+        "--laed-ink",
+        "--laed-muted",
+        "--laed-navy-tint",
+        "--laed-private-bg",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "EditableSessionTitle",
+      "path": "frontend/src/components/chat/EditableSessionTitle.tsx",
+      "exports": [
+        "EditableSessionTitle"
+      ],
+      "tokens": [
+        "--laed-ink",
+        "--laed-private-border",
+        "--laed-radius-sm"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "icons",
+      "path": "frontend/src/components/icons.tsx",
+      "exports": [
+        "Mic",
+        "Send",
+        "ExpandIcon",
+        "MessageCircle",
+        "Phone",
+        "Camera",
+        "MenuBars",
+        "GridIcon",
+        "ArtifactIcon",
+        "ArchiveIcon",
+        "PersonIcon",
+        "GearIcon",
+        "CaptureGlyph",
+        "Sparkle",
+        "Lock",
+        "Folder",
+        "Person",
+        "Check",
+        "SendArrow",
+        "ShareToProjectIcon",
+        "EyeIcon",
+        "EyeOffIcon",
+        "CopyIcon"
+      ],
+      "tokens": [
+        "--laed-muted",
+        "--laed-paper"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "bubbleStyles",
+      "path": "frontend/src/lib/bubbleStyles.ts",
+      "exports": [
+        "meBubblePalette",
+        "privateMeBubblePalette",
+        "privateAiBubblePalette",
+        "BubblePalette"
+      ],
+      "tokens": [
+        "--laed-border",
+        "--laed-bubble-anon-bg",
+        "--laed-bubble-anon-fg",
+        "--laed-bubble-me-bg",
+        "--laed-bubble-me-fg",
+        "--laed-bubble-private-ai-bg",
+        "--laed-bubble-them-0-bg",
+        "--laed-bubble-them-0-fg",
+        "--laed-bubble-them-1-bg",
+        "--laed-bubble-them-1-fg",
+        "--laed-bubble-them-2-bg",
+        "--laed-bubble-them-2-fg",
+        "--laed-bubble-them-3-bg",
+        "--laed-bubble-them-3-fg",
+        "--laed-ink",
+        "--laed-paper-elevated",
+        "--laed-private-accent",
+        "--laed-private-border"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "useAssistantFloatingPanel",
+      "path": "frontend/src/lib/hooks/useAssistantFloatingPanel.ts",
+      "exports": [
+        "AssistantHeightMode",
+        "ResizeEdge"
+      ],
+      "tokens": [
+        "--laed-bottom-bar-offset"
+      ],
+      "cssClasses": [],
+      "drift": []
+    },
+    {
+      "name": "useThirdpartyEmbedding",
+      "path": "frontend/src/lib/hooks/useThirdpartyEmbedding.ts",
+      "exports": [],
+      "tokens": [],
+      "cssClasses": [
+        "laed-thirdparty-embedding-model"
+      ],
+      "drift": []
+    }
+  ]
+}

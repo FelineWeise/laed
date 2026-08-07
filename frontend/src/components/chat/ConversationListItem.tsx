@@ -24,7 +24,7 @@ export function ConversationListItem({
   const activeBg =
     accent === "private"
       ? "var(--laed-private-bg)"
-      : "rgba(29, 58, 87, 0.08)";
+      : "var(--laed-navy-tint)";
 
   return (
     <div

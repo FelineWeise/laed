@@ -36,7 +36,7 @@ export function ThirdpartyEmbeddingPrompt({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[rgba(26,25,23,0.55)]"
+        className="absolute inset-0 bg-[var(--laed-scrim)]"
         aria-label="Dismiss"
         onClick={onCancel}
       />
