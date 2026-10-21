@@ -1,0 +1,171 @@
+# Build backend + frontend on PRs; on push to release branches push sha-* and pin.
+# No Deploy workflow — LAED app is not redeployed via Actions (Caddy may stay up separately).
+name: CI
+
+on:
+  pull_request:
+    branches: [main, LAED-v1.1-refactoring]
+  push:
+    branches: [main, LAED-v1.1-refactoring]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build images
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: laed-backend:build
+          cache-from: type=gha,scope=laed-backend
+          cache-to: type=gha,mode=max,scope=laed-backend
+
+      - name: Build frontend (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: laed-frontend:build
+          cache-from: type=gha,scope=laed-frontend
+          cache-to: type=gha,mode=max,scope=laed-frontend
+
+  release:
+    name: Build, push, and pin
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+    env:
+      REGISTRY_HOST: ${{ vars.REGISTRY_HOST || 'rg.fr-par.scw.cloud' }}
+      REGISTRY_NAMESPACE: ${{ vars.REGISTRY_NAMESPACE || 'laed' }}
+      REGISTRY_IMAGE_BACKEND: ${{ vars.REGISTRY_IMAGE_BACKEND || 'backend' }}
+      REGISTRY_IMAGE_FRONTEND: ${{ vars.REGISTRY_IMAGE_FRONTEND || 'frontend' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Require registry credentials
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${REGISTRY_USERNAME}" || -z "${REGISTRY_PASSWORD}" ]]; then
+            echo "Missing REGISTRY_USERNAME or REGISTRY_PASSWORD on Environment production." >&2
+            echo "See infrastructure/deploy/README.md." >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_HOST }}/${{ env.REGISTRY_NAMESPACE }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Resolve tags
+        id: meta
+        run: |
+          set -euo pipefail
+          short_sha="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          base="${REGISTRY_HOST}/${REGISTRY_NAMESPACE}"
+          echo "short_sha=${short_sha}" >> "${GITHUB_OUTPUT}"
+          echo "backend_repo=${base}/${REGISTRY_IMAGE_BACKEND}" >> "${GITHUB_OUTPUT}"
+          echo "frontend_repo=${base}/${REGISTRY_IMAGE_FRONTEND}" >> "${GITHUB_OUTPUT}"
+          echo "backend_tag=${base}/${REGISTRY_IMAGE_BACKEND}:sha-${short_sha}" >> "${GITHUB_OUTPUT}"
+          echo "frontend_tag=${base}/${REGISTRY_IMAGE_FRONTEND}:sha-${short_sha}" >> "${GITHUB_OUTPUT}"
+          # Push pin commit back to the same branch that triggered the run
+          echo "branch=${GITHUB_REF_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and push backend
+        id: build_backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.backend_tag }}
+          cache-from: type=gha,scope=laed-backend
+          cache-to: type=gha,mode=max,scope=laed-backend
+          provenance: false
+
+      - name: Build and push frontend
+        id: build_frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.frontend_tag }}
+          cache-from: type=gha,scope=laed-frontend
+          cache-to: type=gha,mode=max,scope=laed-frontend
+          provenance: false
+
+      - name: Write image pins
+        id: pin
+        env:
+          BACKEND_DIGEST: ${{ steps.build_backend.outputs.digest }}
+          FRONTEND_DIGEST: ${{ steps.build_frontend.outputs.digest }}
+          BACKEND_REPO: ${{ steps.meta.outputs.backend_repo }}
+          FRONTEND_REPO: ${{ steps.meta.outputs.frontend_repo }}
+          SHORT_SHA: ${{ steps.meta.outputs.short_sha }}
+        run: |
+          set -euo pipefail
+          for v in BACKEND_DIGEST FRONTEND_DIGEST; do
+            if [[ -z "${!v}" ]]; then
+              echo "Missing digest: ${v}" >&2
+              exit 1
+            fi
+          done
+          pin_file="infrastructure/deploy/image.env"
+          mkdir -p "$(dirname "${pin_file}")"
+          {
+            echo "# Non-secret image pins. Updated by CI. Not applied by Actions (no Deploy workflow)."
+            echo "LAED_BACKEND_IMAGE=${BACKEND_REPO}@${BACKEND_DIGEST}"
+            echo "LAED_FRONTEND_IMAGE=${FRONTEND_REPO}@${FRONTEND_DIGEST}"
+          } > "${pin_file}"
+          echo "short_sha=${SHORT_SHA}" >> "${GITHUB_OUTPUT}"
+          cat "${pin_file}"
+
+      - name: Commit pin if changed
+        env:
+          SHORT_SHA: ${{ steps.pin.outputs.short_sha }}
+          BRANCH: ${{ steps.meta.outputs.branch }}
+        run: |
+          set -euo pipefail
+          pin_file="infrastructure/deploy/image.env"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${pin_file}"
+          if git diff --staged --quiet; then
+            echo "Pin already up to date; no commit."
+            exit 0
+          fi
+          git commit -m "chore(deploy): pin images sha-${SHORT_SHA} [skip ci]"
+          git push origin "HEAD:${BRANCH}"

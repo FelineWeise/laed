@@ -2,7 +2,9 @@
 caddy.auth.env
 scripts/scw-registry.local.env
 .DS_Store
-docs/
+docs/*
+!docs/ci_cd_runbook.md
+
 __pycache__/
 *.pyc
 .ruff_cache/
